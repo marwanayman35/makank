@@ -92,3 +92,114 @@
       </form>
     </div>
   </main>
+
+  <script src="js/main.js"></script>
+  <script>
+    function togglePasswordVisibility(inputId, iconEl) {
+      const input = document.getElementById(inputId);
+      const showIcon = "https://cdn-icons-png.flaticon.com/512/159/159604.png";
+      const hideIcon = "https://cdn-icons-png.flaticon.com/512/565/565655.png";
+      if (input.type === "password") {
+        input.type = "text"; iconEl.src = hideIcon;
+      } else {
+        input.type = "password"; iconEl.src = showIcon;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Authentication check
+      if (!AppStorage.getItem('loggedInUser')) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const sessionStr = AppStorage.getItem('checkoutSession');
+      if (!sessionStr) {
+        window.location.href = 'categories.html';
+        return;
+      }
+      
+      const session = JSON.parse(sessionStr);
+      document.getElementById('payTotal').textContent = `${session.total} EGP`;
+
+      // Auto-format Expiry Date
+      document.getElementById('ccExp').addEventListener('input', function (e) {
+        let val = e.target.value.replace(/\D/g, '');
+        if (val.length > 2) {
+          val = val.substring(0, 2) + '/' + val.substring(2, 4);
+        }
+        e.target.value = val;
+      });
+
+      window.setupFormValidation('paymentForm', {
+        ccName: { required: true, type: 'name', customMessage: "Cardholder name is required and should only contain letters." },
+        ccEmail: { required: true, type: 'email' },
+        ccNumber: { required: true, type: 'numeric', minLength: 16, customMessage: "Card number must be exactly 16 digits." },
+        ccExp: { required: true, type: 'expiry', minLength: 5, customMessage: "Format MM/YY required and must be in the future." },
+        ccCVC: { required: true, type: 'numeric', minLength: 3, customMessage: "3-digit CVV required." }
+      }, (form) => {
+        
+        // Finalize purchase - store it in User array if logged in, otherwise just push to confirmation
+        const users = JSON.parse(AppStorage.getItem('makank_users')) || [];
+        const activeUserStr = AppStorage.getItem('loggedInUser');
+        
+        if (!activeUserStr) {
+           window.showToast('Session expired. Please log in again.', 'error');
+           setTimeout(() => window.location.href = 'login.html', 1500);
+           return;
+        }
+
+        const activeUser = JSON.parse(activeUserStr);
+        const enteredName = document.getElementById('ccName').value.trim();
+        const enteredEmail = document.getElementById('ccEmail').value.trim();
+
+        // Strict Account Validation
+        let hasMismatch = false;
+        if (enteredEmail.toLowerCase() !== (activeUser.email || '').toLowerCase()) {
+           window.showError(document.getElementById('ccEmail'), 'Email must exactly match your registered account email.');
+           hasMismatch = true;
+        }
+        if (hasMismatch) return;
+
+        // Create Mock Ticket Object
+        const ticket = {
+           ticketId: 'TKT-' + Math.floor(10000 + Math.random() * 90000),
+           event: session.eventName,
+           date: session.eventDate,
+           venue: session.venue,
+           tier: session.tier,
+           qty: session.quantity,
+           total: session.total,
+           purchasedOn: new Date().toISOString().split('T')[0]
+        };
+
+        if (activeUserStr) {
+           const activeUser = JSON.parse(activeUserStr);
+           // Sync ticket to the master list
+           const userIndex = users.findIndex(u => u.email === activeUser.email);
+           if (userIndex > -1) {
+              if(!users[userIndex].tickets) users[userIndex].tickets = [];
+              users[userIndex].tickets.push(ticket);
+              AppStorage.setItem('makank_users', JSON.stringify(users));
+              
+              // update local active state
+              activeUser.tickets = users[userIndex].tickets;
+              AppStorage.setItem('loggedInUser', JSON.stringify(activeUser));
+           } else {
+              // Graceful fallback for mock sessions
+              if(!activeUser.tickets) activeUser.tickets = [];
+              activeUser.tickets.push(ticket);
+              AppStorage.setItem('loggedInUser', JSON.stringify(activeUser));
+           }
+        }
+        
+        // Add exact generated ticket ID to session so Confirmation page sees it
+        session.issuedTicketId = ticket.ticketId;
+        AppStorage.setItem('checkoutSession', JSON.stringify(session));
+
+        window.location.href = 'confirmation.html';
+      });
+    });
+  </script>
+</body>
+</html>
