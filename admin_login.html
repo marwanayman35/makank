@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal Login - Makank</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .auth-container {
+      max-width: 450px;
+      margin: 4rem auto;
+      padding: 3rem;
+      border: 1px solid var(--accent-purple);
+      box-shadow: var(--shadow-glow-purple);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"></div>
+
+  <nav>
+    <div class="container">
+      <div class="logo">
+        <span class="text-gradient">Makank</span> <span style="font-size: 0.85rem; border: 2px solid var(--accent-purple); padding: 3px 8px; border-radius: 6px; margin-left: 0.2rem; color: var(--accent-purple); font-weight: 800;">ADMIN</span>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">View Site</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="glass auth-container animate fade-in">
+      <h2 class="text-center" style="margin-bottom: 2rem;">Admin <span class="text-gradient" style="color: var(--accent-purple);">Access</span></h2>
+      <form id="adminLoginForm">
+        <div class="form-group">
+          <label>Admin Email</label>
+          <input type="email" id="email" placeholder="admin@makank.com">
+        </div>
+        <div class="form-group">
+          <label>Admin Password</label>
+          <div class="password-container">
+            <input type="password" id="password" placeholder="Enter password">
+            <img src="https://cdn-icons-png.flaticon.com/512/159/159604.png" alt="Show Password" class="toggle-password" onclick="togglePasswordVisibility('password', this)">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Authenticate</button>
+      </form>
+      <div style="text-align: center; margin-top: 1.5rem;">
+         <a href="login.html" style="font-size: 0.9rem; color: var(--text-secondary);">Go to standard login</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Makank Admin.</p>
+    </div>
+  </footer>
