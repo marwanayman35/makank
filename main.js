@@ -92,3 +92,76 @@ toast.style.opacity = '0';
 toast.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
 
 document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translate(-50%, 0)';
+  });
+
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translate(-50%, 20px)';
+    setTimeout(() => toast.remove(), 500);
+  }, 3500);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Sticky Nav on Scroll
+  const nav = document.querySelector('nav');
+  if (nav) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    });
+  }
+  
+  const currentPath = window.location.pathname;
+  const navLinks = document.querySelectorAll('.nav-links a');
+  navLinks.forEach(link => {
+    if (link.getAttribute('href') && currentPath.endsWith(link.getAttribute('href'))) {
+      link.classList.add('active');
+    }
+  });
+
+  const observerOptions = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.1
+  };
+
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.animate-on-scroll').forEach(el => {
+    el.style.opacity = '0'; 
+    observer.observe(el);
+  });
+});
+
+
+window.showError = function(inputElement, message) {
+  const formGroup = inputElement.closest('.form-group');
+  let errorElement = formGroup ? formGroup.querySelector('.error-message') : inputElement.nextElementSibling;
+  
+  if (!errorElement || !errorElement.classList.contains('error-message')) {
+    errorElement = document.createElement('div');
+    errorElement.className = 'error-message';
+    if (formGroup) {
+      formGroup.appendChild(errorElement);
+    } else {
+      inputElement.parentNode.insertBefore(errorElement, inputElement.nextSibling);
+    }
+  }
+  errorElement.textContent = message;
+  errorElement.style.display = '';
+  inputElement.classList.add('is-invalid');
+}
