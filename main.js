@@ -67,3 +67,28 @@ window.showToast = function(message, type = 'success') {
 
   const textSpan = document.createElement('span');
   textSpan.textContent = message;
+  toast.appendChild(iconSpan);
+toast.appendChild(textSpan);
+
+toast.style.position = 'fixed';
+toast.style.bottom = '30px';
+toast.style.left = '50%';
+toast.style.transform = 'translate(-50%, 40px)';
+toast.style.display = 'flex';
+toast.style.alignItems = 'center';
+toast.style.gap = '12px';
+toast.style.padding = '1rem 1.5rem 1rem 1.25rem';
+toast.style.background = 'rgba(255, 255, 255, 0.95)';
+toast.style.backdropFilter = 'blur(16px)';
+toast.style.webkitBackdropFilter = 'blur(16px)';
+toast.style.border = '1px solid var(--border-glass)';
+toast.style.boxShadow = '0 12px 36px rgba(0, 0, 0, 0.1)';
+toast.style.borderRadius = '50px';
+toast.style.zIndex = '99999';
+toast.style.color = 'var(--text-primary)';
+toast.style.fontWeight = '700';
+toast.style.fontSize = '0.95rem';
+toast.style.opacity = '0';
+toast.style.transition = 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
+
+document.body.appendChild(toast);
