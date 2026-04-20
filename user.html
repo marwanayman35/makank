@@ -24,7 +24,7 @@
       border-radius: 50px;
     }
   </style>
-  </head>
+</head>
 <body>
   <div class="bg-blobs"></div>
 
@@ -114,7 +114,15 @@
         window.location.href = 'login.html';
         return;
       }
-      const loggedInUser = JSON.parse(loggedInUserStr);
+      let loggedInUser = JSON.parse(loggedInUserStr);
+      
+      // Sync fresh data from global database so admin-ticket cancellations apply immediately to active session
+      const users = JSON.parse(AppStorage.getItem('makank_users')) || [];
+      const freshUserMatch = users.find(u => u.email === loggedInUser.email);
+      if (freshUserMatch) {
+         loggedInUser = freshUserMatch;
+         AppStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+      }
       
       // Update greeting with user's name
       document.getElementById('userGreeting').innerHTML = `Welcome back, <span class="text-gradient">${loggedInUser.name}</span>!`;
@@ -128,7 +136,7 @@
 
       // Listen for profile changes
       window.setupFormValidation('profileForm', {
-        fullname: { required: true, minLength: 3 },
+        fullname: { required: true, minLength: 3, type: 'name' },
         email: { required: true, type: 'email' }
       }, (form) => {
         const newName = document.getElementById('fullname').value.trim();
@@ -177,11 +185,26 @@
       }
 
       container.innerHTML = '';
+      
+      // Dynamic verification fallback: ensure tickets don't map to events that were deleted before the admin hooks were added
+      const activeEvents = JSON.parse(AppStorage.getItem('makank_events')) || [];
+      const activeMatches = JSON.parse(AppStorage.getItem('makank_matches')) || [];
+      const isEventActive = (name) => {
+         return activeEvents.some(e => e.name === name) || activeMatches.some(m => `${m.homeTeam} vs ${m.awayTeam}` === name);
+      };
+
       user.tickets.forEach(ticket => {
+        const isCancelled = ticket.status === 'cancelled' || !isEventActive(ticket.event);
+        const opacityStyle = isCancelled ? 'opacity: 0.5; filter: grayscale(1);' : '';
+        const borderStyle = isCancelled ? 'border-color: rgba(255, 0, 0, 0.5);' : 'border-color: rgba(0, 245, 255, 0.5);';
+        const cancelBadge = isCancelled ? `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--error); color: white; padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">Cancelled</div>` : '';
+        const titleColor = isCancelled ? 'color: var(--text-secondary); text-decoration: line-through;' : 'color: var(--accent-cyan);';
+
         container.innerHTML += `
-          <div class="ticket-stub" style="background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 3px solid rgba(0, 245, 255, 0.5); padding: 1.5rem; border-radius: 30px; display: flex; justify-content: space-between; align-items: center; position: relative; overflow: hidden; margin-bottom: 1.5rem; transition: transform 0.3s, border-color 0.3s; cursor: pointer;" onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--accent-cyan)'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='rgba(0, 245, 255, 0.5)'">
+          <div class="ticket-stub" style="background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 3px solid transparent; ${borderStyle} padding: 1.5rem; border-radius: 30px; display: flex; justify-content: space-between; align-items: center; position: relative; overflow: hidden; margin-bottom: 1.5rem; transition: transform 0.3s, border-color 0.3s; cursor: pointer; ${opacityStyle}">
+            ${cancelBadge}
             <div style="flex: 1;">
-              <h3 style="color: var(--accent-cyan); font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem; text-transform: uppercase;">${ticket.event}</h3>
+              <h3 style="${titleColor} font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem; text-transform: uppercase;">${ticket.event}</h3>
               <div style="display: flex; gap: 1.5rem; margin-bottom: 1rem; align-items: center;">
                 <div style="display: flex; flex-direction: column;">
                   <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px;">Date</span>
