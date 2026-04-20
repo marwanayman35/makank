@@ -36,7 +36,7 @@
       margin-top: 2rem;
       border-left: 4px solid var(--accent-cyan);
     }
-      </style>
+  </style>
 </head>
 <body>
   <div class="bg-blobs"></div>
@@ -62,14 +62,14 @@
         
         <div style="margin-bottom: 3rem;">
           <h3 style="margin-bottom: 1rem;">1. Select Ticket Tier</h3>
-          <button type="button" class="tier-btn selected" onclick="selectTier(this, 'Regular', 60)">
-            <span>Regular</span> <strong>$60</strong>
+          <button type="button" class="tier-btn selected" id="tierBtnReg" onclick="selectTier(this, 'Regular', 60)">
+            <span>Regular</span> <strong id="lblRegPrice">60 EGP</strong>
           </button>
-          <button type="button" class="tier-btn" onclick="selectTier(this, 'Premium', 150)">
-            <span>Premium</span> <strong>$150</strong>
+          <button type="button" class="tier-btn" id="tierBtnPrem" onclick="selectTier(this, 'Premium', 150)">
+            <span>Premium</span> <strong id="lblPremPrice">150 EGP</strong>
           </button>
-          <button type="button" class="tier-btn" onclick="selectTier(this, 'VIP', 350)">
-            <span>VIP</span> <strong>$350</strong>
+          <button type="button" class="tier-btn" id="tierBtnVip" onclick="selectTier(this, 'VIP', 350)">
+            <span>VIP</span> <strong id="lblVipPrice">350 EGP</strong>
           </button>
         </div>
 
@@ -103,7 +103,7 @@
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
               <div style="font-size: 0.9rem; color: var(--text-secondary);">Total Amount Due</div>
-              <div id="totalPriceUI" style="font-size: 2rem; font-weight: bold; color: black;">$60</div>
+              <div id="totalPriceUI" style="font-size: 2rem; font-weight: bold; color: black;">60 EGP</div>
             </div>
             <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem;">Proceed to Payment</button>
           </div>
@@ -119,7 +119,7 @@
     let selectedTier = 'Regular';
     let basePrice = 60;
     let totalAmt = 60;
-    
+
     document.addEventListener('DOMContentLoaded', () => {
       // Authentication check before allowing booking
       const sessionUser = JSON.parse(AppStorage.getItem('loggedInUser'));
@@ -150,14 +150,48 @@
 
       document.getElementById('eventTitleDisplay').textContent = `${ev.name} | ${ev.date}`;
 
+      // Dynamically load base price and calculate scaling tiers
+      const startPrice = (ev && ev.price) ? parseFloat(ev.price) : 60;
+      const premiumPrice = startPrice + 500;
+      const vipPrice = startPrice + 1000;
+
+      // Reset DOM defaults to dynamic math
+      document.getElementById('lblRegPrice').textContent = `${startPrice} EGP`;
+      document.getElementById('lblPremPrice').textContent = `${premiumPrice} EGP`;
+      document.getElementById('lblVipPrice').textContent = `${vipPrice} EGP`;
+
+      document.getElementById('tierBtnReg').setAttribute('onclick', `selectTier(this, 'Regular', ${startPrice})`);
+      document.getElementById('tierBtnPrem').setAttribute('onclick', `selectTier(this, 'Premium', ${premiumPrice})`);
+      document.getElementById('tierBtnVip').setAttribute('onclick', `selectTier(this, 'VIP', ${vipPrice})`);
+
+      // Initialize defaults to Regular
+      basePrice = startPrice;
+      totalAmt = startPrice;
+      document.getElementById('totalPriceUI').textContent = `${totalAmt} EGP`;
+
       // Pre-fill user data
       document.getElementById('holderName').value = sessionUser.name;
       document.getElementById('holderEmail').value = sessionUser.email;
 
       window.setupFormValidation('bookingForm', {
-        holderName: { required: true },
+        holderName: { required: true, type: 'name' },
         holderEmail: { required: true, type: 'email' }
       }, (form) => {
+        const enteredName = document.getElementById('holderName').value.trim();
+        const enteredEmail = document.getElementById('holderEmail').value.trim();
+
+        // Strict Account Validation
+        let hasMismatch = false;
+        if (enteredName.toLowerCase() !== sessionUser.name.toLowerCase()) {
+           window.showError(document.getElementById('holderName'), 'Name must exactly match your registered account name.');
+           hasMismatch = true;
+        }
+        if (enteredEmail.toLowerCase() !== (sessionUser.email || '').toLowerCase()) {
+           window.showError(document.getElementById('holderEmail'), 'Email must exactly match your registered account email.');
+           hasMismatch = true;
+        }
+        if (hasMismatch) return;
+
         // Save checkout state
         const sessionData = {
           eventId: currentEventId,
@@ -167,15 +201,15 @@
           tier: selectedTier,
           quantity: parseInt(document.getElementById('quantity').value),
           total: totalAmt,
-          holderName: document.getElementById('holderName').value,
-          holderEmail: document.getElementById('holderEmail').value
+          holderName: enteredName,
+          holderEmail: enteredEmail
         };
         AppStorage.setItem('checkoutSession', JSON.stringify(sessionData));
         window.location.href = 'payment.html';
       });
     });
-    
-        function selectTier(btn, tier, price) {
+
+    function selectTier(btn, tier, price) {
       document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
       selectedTier = tier;
@@ -186,7 +220,7 @@
     function calculateTotal() {
       const qty = parseInt(document.getElementById('quantity').value) || 1;
       totalAmt = basePrice * qty;
-      document.getElementById('totalPriceUI').textContent = `$${totalAmt}`;
+      document.getElementById('totalPriceUI').textContent = `${totalAmt} EGP`;
     }
   </script>
 </body>
