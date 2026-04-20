@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment - Makank</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .payment-layout {
+      max-width: 600px;
+      margin: 4rem auto;
+      padding: 3rem;
+    }
+    .payment-tabs {
+      display: flex;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border-glass);
+    }
+    .payment-tab {
+      padding: 1rem 2rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .payment-tab.active {
+      color: black;
+      border-color: var(--accent-cyan);
+      font-weight: bold;
+    }
+    .lock-icon {
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
