@@ -121,12 +121,12 @@
     let totalAmt = 60;
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Authentication check before allowing booking
+      
       const sessionUser = JSON.parse(AppStorage.getItem('loggedInUser'));
       if (!sessionUser) {
         window.showToast('Please log in to book tickets', 'error');
         setTimeout(() => window.location.href = 'login.html', 1500);
-        return; // Halt execution
+        return; 
       }
 
       const urlParams = new URLSearchParams(window.location.search);
@@ -150,12 +150,12 @@
 
       document.getElementById('eventTitleDisplay').textContent = `${ev.name} | ${ev.date}`;
 
-      // Dynamically load base price and calculate scaling tiers
+      
       const startPrice = (ev && ev.price) ? parseFloat(ev.price) : 60;
       const premiumPrice = startPrice + 500;
       const vipPrice = startPrice + 1000;
 
-      // Reset DOM defaults to dynamic math
+      
       document.getElementById('lblRegPrice').textContent = `${startPrice} EGP`;
       document.getElementById('lblPremPrice').textContent = `${premiumPrice} EGP`;
       document.getElementById('lblVipPrice').textContent = `${vipPrice} EGP`;
@@ -164,12 +164,12 @@
       document.getElementById('tierBtnPrem').setAttribute('onclick', `selectTier(this, 'Premium', ${premiumPrice})`);
       document.getElementById('tierBtnVip').setAttribute('onclick', `selectTier(this, 'VIP', ${vipPrice})`);
 
-      // Initialize defaults to Regular
+      
       basePrice = startPrice;
       totalAmt = startPrice;
       document.getElementById('totalPriceUI').textContent = `${totalAmt} EGP`;
 
-      // Pre-fill user data
+      
       document.getElementById('holderName').value = sessionUser.name;
       document.getElementById('holderEmail').value = sessionUser.email;
 
@@ -180,7 +180,7 @@
         const enteredName = document.getElementById('holderName').value.trim();
         const enteredEmail = document.getElementById('holderEmail').value.trim();
 
-        // Strict Account Validation
+        
         let hasMismatch = false;
         if (enteredName.toLowerCase() !== sessionUser.name.toLowerCase()) {
            window.showError(document.getElementById('holderName'), 'Name must exactly match your registered account name.');
@@ -192,7 +192,7 @@
         }
         if (hasMismatch) return;
 
-        // Save checkout state
+        
         const sessionData = {
           eventId: currentEventId,
           eventName: ev.name,
