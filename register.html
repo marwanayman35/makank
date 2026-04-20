@@ -65,3 +65,62 @@
       </p>
     </div>
   </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Makank. Created for premium experiences.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    function togglePasswordVisibility(inputId, iconEl) {
+      const input = document.getElementById(inputId);
+      const showIcon = "https://cdn-icons-png.flaticon.com/512/159/159604.png";
+      const hideIcon = "https://cdn-icons-png.flaticon.com/512/565/565655.png";
+      if (input.type === "password") {
+        input.type = "text"; iconEl.src = hideIcon;
+      } else {
+        input.type = "password"; iconEl.src = showIcon;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.setupFormValidation('registerForm', {
+        fullname: { required: true, type: 'name' },
+        email: { required: true, type: 'email' },
+        password: { required: true, minLength: 6 },
+        confirmPassword: { required: true, match: 'password' }
+      }, (form) => {
+        // Mock Registration Logic
+        const fullname = document.getElementById('fullname').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        let users = JSON.parse(AppStorage.getItem('makank_users')) || [];
+        
+        // Check if email exists
+        const emailInput = document.getElementById('email');
+        if (users.find(u => u.email === email)) {
+          window.showError(emailInput, 'An account with this email already exists');
+          return;
+        }
+
+        const newUser = {
+          id: 'USR-' + Math.floor(1000 + Math.random() * 9000),
+          name: fullname,
+          email: email,
+          password: password,
+          created: new Date().toISOString().split('T')[0]
+        };
+
+        users.push(newUser);
+        AppStorage.setItem('makank_users', JSON.stringify(users));
+
+        window.showToast('Registration successful! Redirecting to login...');
+        setTimeout(() => window.location.href = 'login.html', 1500);
+      });
+    });
+  </script>
+</body>
+</html>
