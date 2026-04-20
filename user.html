@@ -56,3 +56,52 @@
           <a href="#" onclick="switchTab('profileTab')">Profile Settings</a>
           <a href="#" onclick="logoutUser()">Logout</a>
         </div>
+
+        <!-- Main Content Area -->
+        <div class="content flex-1 animate delay-2">
+          
+          <!-- Tab: My Tickets -->
+          <div id="ticketsTab">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+               <h2>My Booked Events</h2>
+               <a href="categories.html" class="btn btn-primary" style="padding: 0.5rem 1rem;">Book More</a>
+            </div>
+            
+            <div id="ticketsContainer">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+
+          <!-- Tab: Profile Settings -->
+          <div id="profileTab" class="glass" style="display: none; width: 100%; max-width: 800px; padding: 2.5rem;">
+            <h2 style="margin-bottom: 2rem;">Update Profile</h2>
+            <form id="profileForm">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="fullname" value="">
+              </div>
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" value="">
+              </div>
+              <div class="form-group" style="margin-bottom: 0.5rem;">
+                <label>New Password (Optional)</label>
+                <input type="password" id="newPassword" placeholder="Enter a new password to change it">
+              </div>
+              <div class="form-group" style="margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Makank. Created for premium experiences.</p>
+    </div>
+  </footer>
+  
