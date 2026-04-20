@@ -40,3 +40,19 @@
       </div>
     </div>
   </nav>
+
+  <main class="container">
+    <section>
+      <div class="animate">
+        <h1 id="userGreeting">Welcome back</h1>
+        <p>Manage your tickets and account settings here.</p>
+      </div>
+
+      <div class="dashboard-layout mt-4" style="margin-top: 3rem;">
+        
+        <!-- Sidebar Navigation -->
+        <div class="sidebar glass animate delay-1" style="padding: 1.5rem; height: fit-content;">
+          <a href="#" class="active" onclick="switchTab('ticketsTab')">My Tickets</a>
+          <a href="#" onclick="switchTab('profileTab')">Profile Settings</a>
+          <a href="#" onclick="logoutUser()">Logout</a>
+        </div>
