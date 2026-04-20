@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment - Makank</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .payment-layout {
+      max-width: 600px;
+      margin: 4rem auto;
+      padding: 3rem;
+    }
+    .payment-tabs {
+      display: flex;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border-glass);
+    }
+    .payment-tab {
+      padding: 1rem 2rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .payment-tab.active {
+      color: black;
+      border-color: var(--accent-cyan);
+      font-weight: bold;
+    }
+    .lock-icon {
+      font-size: 0.8rem;
+      margin-right: 0.5rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"></div>
+
+  <nav>
+    <div class="container">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <a href="javascript:history.back()" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; text-decoration: none;">&larr; Back</a>
+        <div class="logo"><span class="text-gradient">Makank</span></div>
+      </div>
+      <div class="nav-links">
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="glass payment-layout animate fade-in">
+      <h2 style="margin-bottom: 0.5rem;">Secure <span class="text-gradient">Payment</span></h2>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem;">Total Amount: <strong id="payTotal" style="color: black; font-size: 1.5rem; margin-left: 0.5rem;">0 EGP</strong></p>
+
+      <div class="payment-tabs">
+        <div class="payment-tab active" id="tabCard">Credit Card</div>
+      </div>
+
+      <form id="paymentForm">
+        <div class="form-group">
+          <label>Name on Card</label>
+          <input type="text" id="ccName" placeholder="Cardholder Name">
+        </div>
+        <div class="form-group">
+          <label>Account Verification Email</label>
+          <input type="email" id="ccEmail" placeholder="Your registered account email">
+        </div>
+        <div class="form-group">
+          <label>Card Number</label>
+          <input type="text" id="ccNumber" placeholder="0000 0000 0000 0000" maxlength="16">
+        </div>
+        <div class="grid grid-2" style="gap: 1rem;">
+          <div class="form-group">
+            <label>Expiry Date</label>
+            <input type="text" id="ccExp" placeholder="MM/YY" maxlength="5">
+          </div>
+          <div class="form-group">
+            <label>CVC / CVV</label>
+            <!-- Simulate Password toggle just for security vibe -->
+            <div class="password-container">
+              <input type="password" id="ccCVC" placeholder="123" maxlength="3">
+              <img src="https://cdn-icons-png.flaticon.com/512/159/159604.png" alt="Show" class="toggle-password" onclick="togglePasswordVisibility('ccCVC', this)">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 2rem; padding: 1.2rem; font-size: 1.1rem;">
+          Pay Now
+        </button>
+      </form>
+    </div>
+  </main>
