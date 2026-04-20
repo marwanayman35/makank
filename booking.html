@@ -36,7 +36,7 @@
       margin-top: 2rem;
       border-left: 4px solid var(--accent-cyan);
     }
-      </style>
+  </style>
 </head>
 <body>
   <div class="bg-blobs"></div>
@@ -62,14 +62,14 @@
         
         <div style="margin-bottom: 3rem;">
           <h3 style="margin-bottom: 1rem;">1. Select Ticket Tier</h3>
-          <button type="button" class="tier-btn selected" onclick="selectTier(this, 'Regular', 60)">
-            <span>Regular</span> <strong>$60</strong>
+          <button type="button" class="tier-btn selected" id="tierBtnReg" onclick="selectTier(this, 'Regular', 60)">
+            <span>Regular</span> <strong id="lblRegPrice">60 EGP</strong>
           </button>
-          <button type="button" class="tier-btn" onclick="selectTier(this, 'Premium', 150)">
-            <span>Premium</span> <strong>$150</strong>
+          <button type="button" class="tier-btn" id="tierBtnPrem" onclick="selectTier(this, 'Premium', 150)">
+            <span>Premium</span> <strong id="lblPremPrice">150 EGP</strong>
           </button>
-          <button type="button" class="tier-btn" onclick="selectTier(this, 'VIP', 350)">
-            <span>VIP</span> <strong>$350</strong>
+          <button type="button" class="tier-btn" id="tierBtnVip" onclick="selectTier(this, 'VIP', 350)">
+            <span>VIP</span> <strong id="lblVipPrice">350 EGP</strong>
           </button>
         </div>
 
@@ -103,7 +103,7 @@
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
               <div style="font-size: 0.9rem; color: var(--text-secondary);">Total Amount Due</div>
-              <div id="totalPriceUI" style="font-size: 2rem; font-weight: bold; color: black;">$60</div>
+              <div id="totalPriceUI" style="font-size: 2rem; font-weight: bold; color: black;">60 EGP</div>
             </div>
             <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem;">Proceed to Payment</button>
           </div>
@@ -112,82 +112,3 @@
 
     </div>
   </main>
-
-  <script src="js/main.js"></script>
-  <script>
-    let currentEventId = null;
-    let selectedTier = 'Regular';
-    let basePrice = 60;
-    let totalAmt = 60;
-    
-    document.addEventListener('DOMContentLoaded', () => {
-      // Authentication check before allowing booking
-      const sessionUser = JSON.parse(AppStorage.getItem('loggedInUser'));
-      if (!sessionUser) {
-        window.showToast('Please log in to book tickets', 'error');
-        setTimeout(() => window.location.href = 'login.html', 1500);
-        return; // Halt execution
-      }
-
-      const urlParams = new URLSearchParams(window.location.search);
-      currentEventId = urlParams.get('id');
-
-      if (!currentEventId) {
-        window.location.href = 'categories.html';
-        return;
-      }
-
-      let ev = STATE.events.find(e => e.id === currentEventId);
-      if (!ev) {
-        const storedEvt = JSON.parse(AppStorage.getItem('selectedEvent'));
-        if (storedEvt && storedEvt.id === currentEventId) {
-          ev = storedEvt;
-        } else {
-          window.location.href = 'categories.html';
-          return;
-        }
-      }
-
-      document.getElementById('eventTitleDisplay').textContent = `${ev.name} | ${ev.date}`;
-
-      // Pre-fill user data
-      document.getElementById('holderName').value = sessionUser.name;
-      document.getElementById('holderEmail').value = sessionUser.email;
-
-      window.setupFormValidation('bookingForm', {
-        holderName: { required: true },
-        holderEmail: { required: true, type: 'email' }
-      }, (form) => {
-        // Save checkout state
-        const sessionData = {
-          eventId: currentEventId,
-          eventName: ev.name,
-          eventDate: ev.date,
-          venue: ev.venue,
-          tier: selectedTier,
-          quantity: parseInt(document.getElementById('quantity').value),
-          total: totalAmt,
-          holderName: document.getElementById('holderName').value,
-          holderEmail: document.getElementById('holderEmail').value
-        };
-        AppStorage.setItem('checkoutSession', JSON.stringify(sessionData));
-        window.location.href = 'payment.html';
-      });
-    });
-    
-        function selectTier(btn, tier, price) {
-      document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedTier = tier;
-      basePrice = price;
-      calculateTotal();
-    }
-
-    function calculateTotal() {
-      const qty = parseInt(document.getElementById('quantity').value) || 1;
-      totalAmt = basePrice * qty;
-      document.getElementById('totalPriceUI').textContent = `$${totalAmt}`;
-    }
-  </script>
-</body>
-</html>
