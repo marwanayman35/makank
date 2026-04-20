@@ -223,3 +223,87 @@ window.setupFormValidation = (formId, rules, onSuccess) => {
       const rule = rules[fieldId];
 
       clearError(input);
+            if (rule.required && !value) {
+        window.showError(input, rule.customMessage || 'This field is absolutely required and cannot be left empty.');
+        isValid = false;
+      } else if (rule.type === 'email' && !isValidEmail(value)) {
+        window.showError(input, rule.customMessage || 'Please enter a properly formatted email. Only letters and numbers are allowed before the "@".');
+        isValid = false;
+      } else if (rule.type === 'name' && !isValidName(value)) {
+        window.showError(input, rule.customMessage || 'Only alphabetic characters and spaces are allowed.');
+        isValid = false;
+      } else if (rule.type === 'numeric' && !isNumeric(value)) {
+        window.showError(input, rule.customMessage || 'Please enter only numbers.');
+        isValid = false;
+      } else if (rule.type === 'expiry' && !isValidExpiry(value)) {
+        window.showError(input, rule.customMessage || 'Please enter a valid future expiry date in MM/YY format.');
+        isValid = false;
+      } else if (rule.type === 'time' && !isValidTime(value)) {
+        window.showError(input, rule.customMessage || 'Please enter a valid time (e.g. 08:00 PM or 20:00).');
+        isValid = false;
+      } else if (rule.type === 'futureDate' && !isValidFutureDate(value)) {
+        window.showError(input, rule.customMessage || 'Please enter a valid date in the future.');
+        isValid = false;
+      } else if (rule.minVal !== undefined && parseInt(value, 10) < rule.minVal) {
+        window.showError(input, rule.customMessage || `Value must be at least ${rule.minVal}.`);
+        isValid = false;
+      } else if (rule.minLength && value.length < rule.minLength) {
+        window.showError(input, rule.customMessage || `Input is too short. It must be at least ${rule.minLength} characters long.`);
+        isValid = false;
+      } else if (rule.match) {
+        const matchInput = document.getElementById(rule.match);
+        if (matchInput && value !== matchInput.value) {
+           window.showError(input, rule.customMessage || 'The passwords do not match. Please ensure both fields are exactly identical.');
+           isValid = false;
+        }
+      }
+    });
+
+    if (isValid) onSuccess(form);
+  });
+
+  Object.keys(rules).forEach(fieldId => {
+     const input = document.getElementById(fieldId);
+     if (input) {
+       input.addEventListener('input', () => clearError(input));
+     }
+  });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const loggedInUserStr = localStorage.getItem('loggedInUser');
+  const navLinksContainer = document.querySelector('.nav-links');
+  
+  if (loggedInUserStr && navLinksContainer) {
+   
+    navLinksContainer.querySelectorAll('a').forEach(link => {
+      const href = link.getAttribute('href');
+      if (href && (href.includes('login.html') || href.includes('register.html'))) {
+        link.remove();
+      }
+    });
+
+    
+    if (!navLinksContainer.querySelector('a[href*="user.html"]')) {
+      const dbLink = document.createElement('a');
+      dbLink.href = 'user.html';
+      dbLink.textContent = 'Dashboard';
+      if (window.location.href.includes('user.html')) dbLink.classList.add('active');
+      navLinksContainer.appendChild(dbLink);
+    }
+    
+   
+    const logoutBtn = document.createElement('a');
+    logoutBtn.href = '#';
+    logoutBtn.textContent = 'Logout';
+    logoutBtn.onclick = (e) => {
+      e.preventDefault();
+      localStorage.removeItem('loggedInUser');
+      window.location.href = 'login.html';
+    };
+    navLinksContainer.appendChild(logoutBtn);
+  }
+
+
+
+});
