@@ -121,3 +121,105 @@
 
     </div>
   </main>
+
+  <footer style="margin-top: 4rem;">
+    <div class="container"><p>&copy; 2026 Makank. Created for premium experiences.</p></div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    let currentEventId = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      currentEventId = urlParams.get('id');
+
+      if (!currentEventId) { window.location.href = 'events.html'; return; }
+
+      const ev = STATE.events.find(e => e.id === currentEventId);
+      if (!ev) {
+        document.getElementById('loading').textContent = "Event not found. It may have been removed.";
+        return;
+      }
+
+      // Populate UI
+      document.getElementById('eventNameUI').textContent = ev.name;
+      document.getElementById('eventMetaUI').textContent = `${ev.date}  |  ${ev.venue}`;
+      document.getElementById('eventMapVenue').textContent = ev.venue;
+
+      // Description
+      if (ev.description) {
+        document.getElementById('eventDescriptionUI').textContent = ev.description;
+      }
+
+      // Price
+      if (ev.price) {
+        document.getElementById('eventPriceUI').textContent = `From ${parseFloat(ev.price).toFixed(2)} EGP`;
+      }
+      
+      // Badge and hero image
+      const badge = document.getElementById('eventTypeBadge');
+      badge.textContent = ev.type;
+
+      if (ev.headerImage) {
+        document.getElementById('eventHeroBg').style.backgroundImage = `url('${ev.headerImage}')`;
+      } else if (ev.type.toLowerCase() === 'football') {
+        document.getElementById('eventHeroBg').style.backgroundImage = "url('assets/images/football.png')";
+      } else {
+        document.getElementById('eventHeroBg').style.backgroundImage = "url('assets/images/concert.jpg')";
+      }
+
+      if (ev.type.toLowerCase() === 'football') {
+        badge.className = 'badge badge-cyan';
+        document.querySelector('.ticket-widget').style.borderTopColor = 'var(--accent-cyan)';
+      } else {
+        badge.className = 'badge badge-purple';
+        document.querySelector('.ticket-widget').style.borderTopColor = 'var(--accent-purple)';
+      }
+
+      // Gallery
+      if (ev.galleryImages && ev.galleryImages.length > 0) {
+        document.getElementById('gallerySection').style.display = 'block';
+        const grid = document.getElementById('galleryGrid');
+        ev.galleryImages.forEach(imgSrc => {
+          grid.innerHTML += `<img src="${imgSrc}" alt="Event Gallery" loading="lazy">`;
+        });
+      }
+      // Google Maps
+      const mapContainer = document.getElementById('mapContainer');
+      let embedUrl = (ev.mapUrl || '').trim();
+      
+      // Convert various Google Maps URL formats to embed
+      if (embedUrl && embedUrl.includes('google.com/maps') && !embedUrl.includes('/embed')) {
+        if (embedUrl.includes('@')) {
+          const match = embedUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+          if (match) {
+            embedUrl = `https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d5000!2d${match[2]}!3d${match[1]}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1`;
+          }
+        } else if (embedUrl.includes('place/')) {
+          const place = embedUrl.split('place/')[1].split('/')[0];
+          embedUrl = `https://www.google.com/maps/embed/v1/place?key=&q=${encodeURIComponent(place)}`;
+        }
+        if (embedUrl.includes('goo.gl') || embedUrl.includes('maps.app')) {
+          embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(ev.venue)}&output=embed`;
+        }
+      }
+      
+      // If no valid embed URL is found, dynamically create one using the venue name
+      if (!embedUrl || (!embedUrl.includes('/embed') && !embedUrl.includes('output=embed'))) {
+        const queryStr = ev.venue + (ev.city ? ', ' + ev.city : '');
+        embedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(queryStr)}&output=embed`;
+      }
+
+      mapContainer.innerHTML = `<iframe src="${embedUrl}" width="100%" height="100%" style="border:0; border-radius: 12px; z-index: 10; position: relative;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('eventWrapper').style.display = 'block';
+    });
+
+    function goToBooking() {
+      window.location.href = `booking.html?id=${encodeURIComponent(currentEventId)}`;
+    }
+  </script>
+</body>
+</html>
