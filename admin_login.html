@@ -57,3 +57,54 @@
       <p>&copy; 2026 Makank Admin.</p>
     </div>
   </footer>
+    <script src="js/main.js"></script>
+  <script>
+    function togglePasswordVisibility(inputId, iconEl) {
+      const input = document.getElementById(inputId);
+      // Flaticon links
+      const showIcon = "https://cdn-icons-png.flaticon.com/512/159/159604.png";
+      const hideIcon = "https://cdn-icons-png.flaticon.com/512/565/565655.png";
+      
+      if (input.type === "password") {
+        input.type = "text";
+        iconEl.src = hideIcon;
+      } else {
+        input.type = "password";
+        iconEl.src = showIcon;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.setupFormValidation('adminLoginForm', {
+        email: { required: true, type: 'email' },
+        password: { required: true }
+      }, (form) => {
+        window.clearError(document.getElementById('email'));
+        window.clearError(document.getElementById('password'));
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const pwdInput = document.getElementById('password');
+        const emailInput = document.getElementById('email');
+        
+        let admins = JSON.parse(AppStorage.getItem('makank_admins')) || [];
+
+        const adminExists = admins.some(a => a.email === email);
+        if (!adminExists) {
+            window.showError(emailInput, 'No admin account found with this email');
+            return;
+        }
+
+        const admin = admins.find(a => a.email === email && a.password === password);
+        if (admin) {
+          AppStorage.setItem('loggedInAdmin', JSON.stringify(admin));
+          window.showToast('Authentication successful!');
+          setTimeout(() => window.location.href = 'admin.html', 1000);
+        } else {
+          window.showError(pwdInput, 'Incorrect admin credentials.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
