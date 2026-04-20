@@ -266,3 +266,130 @@
   </main>
 
   <footer><div class="container"><p>&copy; 2026 Makank Admin Dashboard.</p></div></footer>
+  <!-- Edit User Modal -->
+<div class="modal-overlay" id="editUserModal">
+  <div class="modal glass">
+    <h3>Edit User Credentials</h3>
+    <div class="form-group" style="margin-top: 1rem;"><label>Name</label><input type="text" id="editUserName" style="background: white; color: black;"></div>
+    <div class="form-group"><label>Email</label><input type="email" id="editUserEmail" style="background: white; color: black;"></div>
+    <div class="form-group"><label>New Password</label><input type="text" id="editUserPassword" style="background: white; color: black;"></div>
+    <button class="btn btn-primary" onclick="saveUserEdit()">Save Changes</button>
+    <button class="btn btn-secondary" onclick="closeModal('editUserModal')">Cancel</button>
+  </div>
+</div>
+
+<!-- Edit Event Type Modal -->
+<div class="modal-overlay" id="editEventTypeModal">
+  <div class="modal glass">
+    <h3>Edit Event Type</h3>
+    <div class="form-group" style="margin-top: 1rem;">
+      <label>Type Name</label>
+      <input type="text" id="editEventTypeName" style="background: white; color: black;">
+    </div>
+    <button class="btn btn-primary" onclick="saveEventTypeEdit()">Save Changes</button>
+    <button class="btn btn-secondary" onclick="closeModal('editEventTypeModal')">Cancel</button>
+  </div>
+
+<script src="js/main.js"></script>
+<script>
+ 
+  const TEAMS = [
+    { name: 'Al Ahly FC', logo: 'egypt_al-ahly.football-logos.cc.svg' },
+    { name: 'Al Ittihad Alexandria', logo: 'egypt_al-ittihad-alexandria.football-logos.cc.svg' },
+    { name: 'Al Masry SC', logo: 'egypt_al-masry.football-logos.cc.svg' },
+    { name: 'Al Mokawloon Al Arab', logo: 'egypt_al-mokawloon-al-arab.football-logos.cc.svg' },
+    { name: 'Ceramica Cleopatra', logo: 'egypt_ceramica-cleopatra.football-logos.cc.svg' },
+    { name: 'ENPPI', logo: 'egypt_enppi.football-logos.cc.svg' },
+    { name: 'Ismaily SC', logo: 'egypt_ismaily.football-logos.cc.svg' },
+    { name: 'Petrojet FC', logo: 'egypt_petrojet.football-logos.cc.svg' },
+    { name: 'Pyramids FC', logo: 'egypt_pyramids.football-logos.cc.svg' },
+    { name: 'Zamalek SC', logo: 'egypt_zamalek.football-logos.cc (2).svg' }
+  ];
+
+  let currentEditUserId = null;
+  let headerImageData = null;
+  let galleryImagesData = [];
+
+  
+  function getUsers() { return JSON.parse(AppStorage.getItem('makank_users')) || []; }
+  function setUsers(users) { AppStorage.setItem('makank_users', JSON.stringify(users)); STATE.users = users; }
+  function getAdmins() { return JSON.parse(AppStorage.getItem('makank_admins')) || []; }
+  function setAdmins(admins) { AppStorage.setItem('makank_admins', JSON.stringify(admins)); STATE.admins = admins; }
+  function getAllTickets() {
+    const users = getUsers();
+    const all = [];
+    users.forEach(u => { if (u.tickets) u.tickets.forEach(t => all.push({ ...t, userName: u.name, userEmail: u.email })); });
+    return all;
+  }
+
+  function adminLogout() { AppStorage.removeItem('loggedInAdmin'); window.location.href = 'admin_login.html'; }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+  function switchAdminTab(evt, tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.sidebar a').forEach(l => l.classList.remove('active'));
+    if (evt && evt.target) {
+      evt.target.classList.add('active');
+    } else {
+      const link = document.querySelector(`.sidebar a[onclick*="${tabId}"]`);
+      if (link) link.classList.add('active');
+    }
+    document.getElementById(tabId).classList.add('active');
+    renderAdminData();
+  }
+
+ 
+  function renderAdminData() {
+    const users = getUsers();
+    const allTickets = getAllTickets();
+
+    document.getElementById('statUsers').innerText = users.length;
+    document.getElementById('statTickets').innerText = allTickets.length;
+    let totalRevenue = 0;
+    allTickets.forEach(t => { totalRevenue += parseFloat(t.total) || 0; });
+    document.getElementById('statRevenue').innerText = totalRevenue.toLocaleString() + ' EGP';
+
+    const typesList = document.getElementById('eventTypesList');
+    const addSelect = document.getElementById('eventTypeSelect');
+    typesList.innerHTML = '';
+    addSelect.innerHTML = '';
+    STATE.eventTypes.filter(t => t !== 'football').forEach(t => {
+      typesList.innerHTML += `<li style="text-transform: capitalize; padding: 0.5rem 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-glass);">
+        <span>${t}</span>
+        <div>
+          <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.8rem;margin-right:0.5rem;" onclick="openEditEventType('${t}')">Edit</button>
+          <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.8rem;color:var(--error);border-color:var(--error);" onclick="deleteEventType('${t}')">Del</button>
+        </div>
+      </li>`;
+      addSelect.innerHTML += `<option value="${t}">${t}</option>`;
+    });
+
+    
+    const matchesBody = document.getElementById('matchesTableBody');
+    matchesBody.innerHTML = '';
+    STATE.matches.forEach(m => {
+      const statusLabel = m.status === 'available' ? '<span style="color:var(--success);">Available</span>' : '<span style="color:var(--error);">Closed</span>';
+      matchesBody.innerHTML += `<tr>
+        <td style="font-family:monospace;font-size:0.85rem;">${m.id}</td>
+        <td style="font-weight:600;">${m.homeTeam} vs ${m.awayTeam}</td>
+        <td>${m.date}</td><td>${m.stadium}</td><td>${statusLabel}</td>
+        <td style="white-space:nowrap;">
+          <button class="featured-toggle ${m.featured ? 'featured-on' : 'featured-off'}" onclick="toggleMatchFeatured('${m.id}')">${m.featured ? 'Featured' : 'Not Featured'}</button>
+          <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.75rem;margin-left:0.5rem;color:var(--error);border-color:var(--error);" onclick="deleteMatch('${m.id}')">Del</button>
+        </td>
+      </tr>`;
+    });
+
+    const entBody = document.getElementById('entertainmentTableBody');
+    entBody.innerHTML = '';
+    STATE.events.forEach(e => {
+      entBody.innerHTML += `<tr>
+        <td style="font-family:monospace;font-size:0.85rem;">${e.id}</td>
+        <td style="font-weight:600;">${e.name}</td><td>${e.date}</td><td>${e.venue}</td>
+        <td style="text-transform:capitalize;">${e.type}</td>
+        <td style="white-space:nowrap;">
+          <button class="featured-toggle ${e.featured ? 'featured-on' : 'featured-off'}" onclick="toggleEventFeatured('${e.id}')">${e.featured ? 'Featured' : 'Not Featured'}</button>
+          <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.75rem;margin-left:0.5rem;color:var(--error);border-color:var(--error);" onclick="deleteEvent('${e.id}')">Del</button>
+        </td>
+      </tr>`;
+    });
