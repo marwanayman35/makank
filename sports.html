@@ -107,3 +107,16 @@
   document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('matchesContainer');
     const matches = STATE.matches;
+    if (matches.length === 0) {
+  container.innerHTML = `<div style="text-align:center; padding:4rem;"><h2 style="color:var(--text-secondary);">No matches scheduled yet</h2><p style="color:rgba(255,255,255,0.4);">Check back later for the latest fixtures.</p></div>`;
+  return;
+}
+
+matches.forEach((m, idx) => {
+  const isAvailable = m.status === 'available';
+  const actionBtn = isAvailable
+    ? `<button class="btn btn-available btn-status" onclick="bookMatch('${m.homeTeam} vs ${m.awayTeam}', '${m.date}', '${m.stadium}')">Book Ticket</button>`
+    : `<button class="btn disabled btn-disabled btn-status">Booking Closed</button>`;
+  const statusDot = isAvailable
+    ? `<span class="status-dot dot-green"></span>Available`
+    : `<span class="status-dot dot-red"></span>Booking Closed`;
