@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports - Makank</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .matches-container {
+      max-width: 1000px;
+      margin: 3rem auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .match-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-glass);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+      display: flex;
+      flex-direction: column;
+    }
+    .match-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      border-color: rgba(0, 245, 255, 0.5);
+    }
+    .match-main {
+      padding: 1.5rem 2rem;
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1.2fr auto;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    @media (max-width: 900px) {
+      .match-main { grid-template-columns: 1fr; gap: 1.5rem; }
+      .match-footer { flex-wrap: wrap; gap: 1rem; }
+    }
+    .team-logos { display: flex; align-items: center; margin-right: 1.2rem; }
+    .team-logo {
+      width: 55px; height: 55px; border-radius: 50%; background: white; padding: 6px;
+      border: 2px solid var(--accent-cyan); box-shadow: 0 4px 10px rgba(0,0,0,0.3); object-fit: contain;
+    }
+        .team-logo:last-child { margin-left: -20px; border-color: var(--accent-purple); }
+    .team-names { font-size: 1.2rem; font-weight: 700; }
+    .vs-text { color: var(--text-secondary); font-size: 0.85rem; margin: 0 0.5rem; font-weight: 400; }
+    .match-info-block { display: flex; align-items: center; gap: 0.8rem; }
+    .info-icon svg { width: 24px; height: 24px; stroke: var(--accent-cyan); }
+    .info-text { display: flex; flex-direction: column; }
+    .info-label { font-weight: bold; font-size: 1rem; }
+    .info-sub { color: var(--text-secondary); font-size: 0.85rem; }
+    .btn-status { padding: 0.8rem 2rem; border-radius: 50px; font-weight: bold; text-align: center; min-width: 160px; }
+    .btn-available { background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); color: #fff; border: none; cursor: pointer; font-size: 1rem; transition: all 0.3s; }
+    .btn-available:hover { box-shadow: 0 0 15px rgba(0, 245, 255, 0.4); transform: scale(1.05); }
+    .btn-disabled { background: rgba(0, 140, 150, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 245, 255, 0.3); pointer-events: none; font-size: 1rem; }
+    .match-footer {
+      padding: 1rem 2rem; background: rgba(255, 255, 255, 0.08);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;
+      display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 0.85rem;
+    }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .dot-green { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .dot-red { background: var(--error); box-shadow: 0 0 8px var(--error); }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"></div>
+  <nav>
+  <div class="container">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <a href="categories.html" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; text-decoration: none;">&larr; Back</a>
+      <div class="logo"><span class="text-gradient">Makank</span></div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="categories.html" class="active">Browse Events</a>
+      <a href="login.html">Login</a>
+      <a href="register.html">Register</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container" style="margin-top: 4rem;">
+  <div style="text-align: center; margin-bottom: 3rem;">
+    <h1 class="text-gradient" style="font-size: 3rem; margin-bottom: 1rem;">Football Matches</h1>
+    <p style="color: var(--text-secondary); font-size: 1.1rem;">Secure your spot at the biggest Nile League clashes.</p>
+  </div>
+
+  <div class="matches-container" id="matchesContainer">
+    <!-- Rendered dynamically by JS -->
+  </div>
+</main>
+<footer style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-glass);">
+  <div class="container text-center">
+    <p style="color: var(--text-secondary);">&copy; 2026 Makank. Created for premium experiences.</p>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+  const locationIcon = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+  const calendarIcon = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('matchesContainer');
+    const matches = STATE.matches;
+
+    if (matches.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:4rem;"><h2 style="color:var(--text-secondary);">No matches scheduled yet</h2><p style="color:rgba(255,255,255,0.4);">Check back later for the latest fixtures.</p></div>`;
+      return;
+    }
+
+    matches.forEach((m, idx) => {
+      const isAvailable = m.status === 'available';
+      const actionBtn = isAvailable
+        ? `<button class="btn btn-available btn-status" onclick="bookMatch('${m.homeTeam} vs ${m.awayTeam}', '${m.date}', '${m.stadium}')">Book Ticket</button>`
+        : `<button class="btn disabled btn-disabled btn-status">Booking Closed</button>`;
+      const statusDot = isAvailable
+        ? `<span class="status-dot dot-green"></span>Available`
+        : `<span class="status-dot dot-red"></span>Booking Closed`;
+        container.innerHTML += `
+          <div class="match-card animate fade-in" style="animation-delay: ${idx * 0.1}s;">
+            <div class="match-main">
+              <div style="display: flex; align-items: center;">
+                <div class="team-logos">
+                  <img src="assets/Football%20Matches/${encodeURIComponent(m.homeTeamLogo)}" class="team-logo" alt="${m.homeTeam}">
+                  <img src="assets/Football%20Matches/${encodeURIComponent(m.awayTeamLogo)}" class="team-logo" alt="${m.awayTeam}">
+                </div>
+                <div class="team-names">${m.homeTeam} <span class="vs-text">vs</span> ${m.awayTeam}</div>
+              </div>
+              <div class="match-info-block">
+                <span class="info-icon">${locationIcon}</span>
+                <div class="info-text">
+                  <span class="info-label">${m.stadium}</span>
+                  <span class="info-sub">${m.city}</span>
+                </div>
+              </div>
+              <div class="match-info-block">
+                <span class="info-icon">${calendarIcon}</span>
+                <div class="info-text">
+                  <span class="info-label">${m.date}</span>
+                  <span class="info-sub">${m.time}</span>
+                </div>
+              </div>
+              <div>${actionBtn}</div>
+            </div>
+            <div class="match-footer">
+              <span>Tournament: <strong>Nile League 2025/2026</strong></span>
+              <span>Match No: <strong>${m.matchNo}</strong></span>
+              <span>Final Stage</span>
+              <span>${statusDot}</span>
+            </div>
+          </div>`;
+      });
+    });
+
+    function bookMatch(eventName, date, venue) {
+      if (!AppStorage.getItem('loggedInUser')) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const evt = { id: 'MATCH-' + Math.floor(Math.random()*10000), name: eventName, date: date, venue: venue };
+      AppStorage.setItem('selectedEvent', JSON.stringify(evt));
+      window.location.href = 'booking.html?id=' + evt.id;
+    }
+  </script>
+</body>
+</html>

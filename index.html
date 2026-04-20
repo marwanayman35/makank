@@ -1,0 +1,144 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Makank - Premium Event Booking</title>
+  <meta name="description" content="Book tickets for the most anticipated football matches and concerts with Makank. Premium secure booking.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="bg-blobs"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container">
+      <div class="logo">
+        <span class="text-gradient">Makank</span>
+      </div>
+      <div class="nav-links">
+        <a href="index.html" class="active">Home</a>
+        <a href="categories.html">Browse Events</a>
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero container">
+      <div class="hero-content animate delay-1" style="max-width: 580px;">
+        <h1>Find Your <span class="text-gradient">Next Ticket</span>.</h1>
+        <p>Your exclusive pass to the best live events in Egypt. Book tickets for top local football matches and legendary concerts today.</p>
+        <form action="events.html" method="GET" style="display: flex; gap: 1rem; margin-top: 2rem; background: rgba(255, 255, 255, 0.95); padding: 0.5rem 0.5rem 0.5rem 1.5rem; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+          <input type="text" name="q" placeholder="Search events, artists..." style="flex: 1; border: none; background: transparent; color: black; font-weight: 500; font-size: 1.1rem; outline: none;">
+          <button type="submit" class="btn btn-primary" style="border-radius: 50px; padding: 0.8rem 2rem;">Search</button>
+        </form>
+      </div>
+      <div class="hero-image animate delay-2">
+        <img src="assets/hero section main.png" alt="Hero Visual" style="width: 110%; max-width: 900px; height: auto; filter: drop-shadow(0 24px 48px rgba(0,0,0,0.18)); transform: translateY(-20px); margin-left: 80px;">
+      </div>
+    </section>
+      <!-- Top Categories -->
+  <section class="container animate delay-2">
+    <h2 style="margin-bottom: 2rem;">Browse <span class="text-gradient">Categories</span></h2>
+    <div class="grid grid-2" id="categoriesContainer">
+      <!-- Rendered by JS -->
+    </div>
+  </section>
+
+  <!-- Upcoming Events Section -->
+  <section class="container animate delay-2" style="margin-top: 3rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+      <h2>Upcoming <span class="text-gradient">Events</span></h2>
+      <a href="categories.html" style="color: var(--accent-cyan); font-weight: bold; font-size: 0.9rem;">View All &rarr;</a>
+    </div>
+    <div class="grid grid-3" id="featuredContainer">
+      <!-- Rendered by JS -->
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2026 Makank. Created for premium experiences.</p>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+     // Render Categories
+     const catContainer = document.getElementById('categoriesContainer');
+     STATE.eventTypes.forEach(cat => {
+        let bgImage = cat.toLowerCase() === 'football' ? 'football.png' : 'concert.jpg';
+        let linkUrl = cat.toLowerCase() === 'football' ? 'sports.html' : 'events.html';
+        catContainer.innerHTML += `
+          <a href="${linkUrl}" class="glass" style="display: block; text-decoration: none; overflow: hidden; border-radius: 24px; transition: transform 0.3s;">
+            <div style="background: url('assets/images/${bgImage}') center/cover; width: 100%; aspect-ratio: 16/10;"></div>
+            <div style="padding: 1.8rem 1.5rem; text-align: center;">
+              <h3 style="text-transform: capitalize; margin: 0; font-size: 1.3rem;">${cat}</h3>
+            </div>
+          </a>
+        `;
+     });
+
+       const featuredContainer = document.getElementById('featuredContainer');
+       
+      
+       const featuredEvents = STATE.events.filter(ev => ev.featured === true);
+       
+      
+       const featuredMatches = STATE.matches.filter(m => m.featured === true);
+
+       const hasAny = featuredEvents.length > 0 || featuredMatches.length > 0;
+
+       if (!hasAny) {
+         featuredContainer.innerHTML = `
+           <div class="glass" style="padding: 3rem; text-align: center; grid-column: 1 / -1; border: 1px dashed var(--border-glass);">
+             <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">No Featured Events Yet</h3>
+             <p style="color: rgba(255,255,255,0.4);">Check back soon for upcoming highlighted events!</p>
+           </div>`;
+         return;
+       }
+
+      
+       featuredMatches.forEach(m => {
+         featuredContainer.innerHTML += `
+           <div class="glass" style="overflow: hidden; border-radius: 24px; transition: transform 0.3s;">
+             <div style="background: url('assets/images/football.png') center/cover; width: 100%; aspect-ratio: 16/10; position: relative;">
+               <div style="position: absolute; bottom: 10px; left: 10px; display: flex; gap: 5px;">
+                 <img src="assets/Football%20Matches/${encodeURIComponent(m.homeTeamLogo)}" style="width: 40px; height: 40px; border-radius: 50%; background: white; padding: 3px; object-fit: contain; border: 2px solid var(--accent-cyan);" alt="${m.homeTeam}">
+                 <img src="assets/Football%20Matches/${encodeURIComponent(m.awayTeamLogo)}" style="width: 40px; height: 40px; border-radius: 50%; background: white; padding: 3px; object-fit: contain; border: 2px solid var(--accent-purple);" alt="${m.awayTeam}">
+               </div>
+             </div>
+             <div style="padding: 1.5rem 1.8rem;">
+               <span class="badge badge-cyan">Football</span>
+               <h3>${m.homeTeam} vs ${m.awayTeam}</h3>
+               <p style="color: var(--text-secondary); font-size: 0.9rem;">${m.stadium} | ${m.date}</p>
+               <a href="sports.html" class="btn btn-secondary" style="width: 100%; margin-top: 1rem; text-align: center; display: block;">View Match</a>
+             </div>
+           </div>
+         `;
+       });
+
+       featuredEvents.forEach(ev => {
+         const heroImg = ev.headerImage || `assets/images/${ev.type === 'football' ? 'football.png' : 'concert.jpg'}`;
+         featuredContainer.innerHTML += `
+           <div class="glass" style="overflow: hidden; border-radius: 24px; transition: transform 0.3s;">
+             <div style="background: url('${heroImg}') center/cover; width: 100%; aspect-ratio: 16/10;"></div>
+             <div style="padding: 1.5rem 1.8rem;">
+               <span class="badge badge-purple" style="text-transform: capitalize;">${ev.type}</span>
+               <h3>${ev.name}</h3>
+               <p style="color: var(--text-secondary); font-size: 0.9rem;">${ev.venue} | ${ev.date}</p>
+               <a href="event_details.html?id=${encodeURIComponent(ev.id)}" class="btn btn-secondary" style="width: 100%; margin-top: 1rem; text-align: center; display: block;">View Details</a>
+             </div>
+           </div>
+         `;
+       });
+    });
+  </script>
+</body>
+</html>
