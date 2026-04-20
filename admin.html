@@ -393,3 +393,195 @@
         </td>
       </tr>`;
     });
+      // Entertainment events table
+  const entBody = document.getElementById('entertainmentTableBody');
+  entBody.innerHTML = '';
+  STATE.events.forEach(e => {
+    entBody.innerHTML += `<tr>
+      <td style="font-family:monospace;font-size:0.85rem;">${e.id}</td>
+      <td style="font-weight:600;">${e.name}</td><td>${e.date}</td><td>${e.venue}</td>
+      <td style="text-transform:capitalize;">${e.type}</td>
+      <td style="white-space:nowrap;">
+        <button class="featured-toggle ${e.featured ? 'featured-on' : 'featured-off'}" onclick="toggleEventFeatured('${e.id}')">${e.featured ? 'Featured' : 'Not Featured'}</button>
+        <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.75rem;margin-left:0.5rem;color:var(--error);border-color:var(--error);" onclick="deleteEvent('${e.id}')">Del</button>
+      </td>
+    </tr>`;
+  });
+
+  // Users table
+  const usersBody = document.getElementById('usersTableBody');
+  usersBody.innerHTML = '';
+  if (users.length === 0) {
+    usersBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);padding:2rem;">No registered users yet.</td></tr>`;
+  } else {
+    users.forEach(u => {
+      const tc = (u.tickets && u.tickets.length) || 0;
+      const badge = tc > 0 ? `<span class="ticket-badge badge-tickets">${tc} ticket${tc>1?'s':''}</span>` : `<span class="ticket-badge badge-none">None</span>`;
+      usersBody.innerHTML += `<tr>
+        <td style="font-family:monospace;font-size:0.85rem;">${u.id||'—'}</td>
+        <td style="font-weight:600;">${u.name}</td><td>${u.email}</td><td>${badge}</td>
+        <td style="font-size:0.85rem;color:var(--text-secondary);">${u.created||'—'}</td>
+        <td>
+          <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.8rem;" onclick="openEditUser('${u.id}')">Edit</button>
+          <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.8rem;color:var(--error);border-color:var(--error);" onclick="deleteUser('${u.id}')">Del</button>
+        </td>
+      </tr>`;
+    });
+  }
+
+  // Admins table
+  const adminsBody = document.getElementById('adminsTableBody');
+  adminsBody.innerHTML = '';
+  const admins = getAdmins();
+  if (admins.length === 0) {
+    adminsBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);padding:2rem;">No registered admins yet.</td></tr>`;
+  } else {
+    admins.forEach(a => {
+      adminsBody.innerHTML += `<tr>
+        <td style="font-family:monospace;font-size:0.85rem;">${a.id||'—'}</td>
+        <td style="font-weight:600;">${a.name}</td><td>${a.email}</td>
+        <td>
+          <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.8rem;color:var(--error);border-color:var(--error);" onclick="deleteAdmin('${a.id}')">Del</button>
+        </td>
+      </tr>`;
+    });
+  }
+
+  // Booked tickets
+  const ticketsCont = document.getElementById('allTicketsContainer');
+  if (allTickets.length === 0) {
+    ticketsCont.innerHTML = `<div style="text-align:center;padding:3rem;border:1px dashed var(--border-glass);border-radius:12px;"><h3 style="color:var(--text-secondary);">No Tickets Booked Yet</h3><p style="color:rgba(255,255,255,0.4);">When users purchase tickets, they will appear here.</p></div>`;
+  } else {
+    let html = `<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Ticket ID</th><th>Event</th><th>User</th><th>Tier</th><th>Qty</th><th>Total</th><th>Purchased</th></tr></thead><tbody>`;
+    allTickets.forEach(t => {
+      html += `<tr><td style="font-family:monospace;font-size:0.85rem;color:var(--accent-cyan);">${t.ticketId}</td><td style="font-weight:600;">${t.event}</td><td>${t.userName} <span style="color:var(--text-secondary);font-size:0.8rem;">(${t.userEmail})</span></td><td style="text-transform:capitalize;">${t.tier}</td><td>${t.qty}</td><td style="font-weight:bold;">${t.total} EGP</td><td style="font-size:0.85rem;color:var(--text-secondary);">${t.purchasedOn||'—'}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+    ticketsCont.innerHTML = html;
+  }
+
+  // Populate team dropdowns
+  const homeSelect = document.getElementById('matchHomeTeam');
+  const awaySelect = document.getElementById('matchAwayTeam');
+  homeSelect.innerHTML = '';
+  awaySelect.innerHTML = '';
+  TEAMS.forEach(t => {
+    homeSelect.innerHTML += `<option value="${t.name}" data-logo="${t.logo}">${t.name}</option>`;
+    awaySelect.innerHTML += `<option value="${t.name}" data-logo="${t.logo}">${t.name}</option>`;
+  });
+  // Default away to second team
+  if (awaySelect.options.length > 1) awaySelect.selectedIndex = 1;
+}
+
+// ========================
+// FEATURED TOGGLES
+// ========================
+function toggleMatchFeatured(id) {
+  const m = STATE.matches.find(x => x.id === id);
+  if (m) { m.featured = !m.featured; saveState(); renderAdminData(); }
+}
+function toggleEventFeatured(id) {
+  const e = STATE.events.find(x => x.id === id);
+  if (e) { e.featured = !e.featured; saveState(); renderAdminData(); }
+}
+
+function cancelTicketsForEvent(eventName) {
+  let users = getUsers();
+  let updated = false;
+  users.forEach(u => {
+     if (u.tickets) {
+         u.tickets.forEach(t => {
+            if (t.event === eventName) { t.status = 'cancelled'; updated = true; }
+         });
+     }
+  });
+  if (updated) setUsers(users);
+}
+
+function deleteMatch(id) {
+  if (!confirm('Are you sure you want to delete this match?')) return;
+  const m = STATE.matches.find(x => x.id === id);
+  const eventName = m ? `${m.homeTeam} vs ${m.awayTeam}` : null;
+
+  STATE.matches = STATE.matches.filter(m => m.id !== id);
+  if (eventName) cancelTicketsForEvent(eventName);
+
+  saveState();
+  renderAdminData();
+  window.showToast('Match deleted successfully');
+}
+
+function deleteEvent(id) {
+  if (!confirm('Are you sure you want to delete this event?')) return;
+  const e = STATE.events.find(x => x.id === id);
+  const eventName = e ? e.name : null;
+
+  STATE.events = STATE.events.filter(e => e.id !== id);
+  if (eventName) cancelTicketsForEvent(eventName);
+
+  saveState();
+  renderAdminData();
+  window.showToast('Event deleted successfully');
+}
+
+// ========================
+// IMAGE UPLOAD HANDLERS
+// ========================
+function setupDropZone(zoneId, fileInputId, previewId, isMultiple) {
+  const zone = document.getElementById(zoneId);
+  const fileInput = document.getElementById(fileInputId);
+
+  zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+  zone.addEventListener('dragleave', () => { zone.classList.remove('dragover'); });
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault(); zone.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (isMultiple) { handleGalleryFiles(files); } else { handleHeaderFile(files[0]); }
+  });
+  fileInput.addEventListener('change', () => {
+    if (isMultiple) { handleGalleryFiles(fileInput.files); } else { handleHeaderFile(fileInput.files[0]); }
+  });
+}
+
+function compressImage(file, callback) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+      const max_size = 800;
+      if (width > height) {
+        if (width > max_size) { height *= max_size / width; width = max_size; }
+      } else {
+        if (height > max_size) { width *= max_size / height; height = max_size; }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      callback(canvas.toDataURL('image/jpeg', 0.6));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleHeaderFile(file) {
+  if (!file) return;
+  compressImage(file, (compressedBase64) => {
+    headerImageData = compressedBase64;
+    document.getElementById('headerPreview').innerHTML = `<img src="${headerImageData}" alt="Header Preview">`;
+  });
+}
+
+function handleGalleryFiles(files) {
+  Array.from(files).forEach(file => {
+    compressImage(file, (compressedBase64) => {
+      galleryImagesData.push(compressedBase64);
+      const preview = document.getElementById('galleryPreview');
+      preview.innerHTML += `<img src="${compressedBase64}" alt="Gallery">`;
+    });
+  });
+}
