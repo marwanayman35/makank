@@ -93,3 +93,31 @@
     <!-- Rendered dynamically by JS -->
   </div>
 </main>
+<footer style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-glass);">
+  <div class="container text-center">
+    <p style="color: var(--text-secondary);">&copy; 2026 Makank. Created for premium experiences.</p>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+  const locationIcon = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`;
+  const calendarIcon = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('matchesContainer');
+    const matches = STATE.matches;
+
+    if (matches.length === 0) {
+      container.innerHTML = `<div style="text-align:center; padding:4rem;"><h2 style="color:var(--text-secondary);">No matches scheduled yet</h2><p style="color:rgba(255,255,255,0.4);">Check back later for the latest fixtures.</p></div>`;
+      return;
+    }
+
+    matches.forEach((m, idx) => {
+      const isAvailable = m.status === 'available';
+      const actionBtn = isAvailable
+        ? `<button class="btn btn-available btn-status" onclick="bookMatch('${m.homeTeam} vs ${m.awayTeam}', '${m.date}', '${m.stadium}')">Book Ticket</button>`
+        : `<button class="btn disabled btn-disabled btn-status">Booking Closed</button>`;
+      const statusDot = isAvailable
+        ? `<span class="status-dot dot-green"></span>Available`
+        : `<span class="status-dot dot-red"></span>Booking Closed`;
