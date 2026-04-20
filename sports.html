@@ -68,3 +68,28 @@
 </head>
 <body>
   <div class="bg-blobs"></div>
+  <nav>
+  <div class="container">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <a href="categories.html" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; text-decoration: none;">&larr; Back</a>
+      <div class="logo"><span class="text-gradient">Makank</span></div>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="categories.html" class="active">Browse Events</a>
+      <a href="login.html">Login</a>
+      <a href="register.html">Register</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container" style="margin-top: 4rem;">
+  <div style="text-align: center; margin-bottom: 3rem;">
+    <h1 class="text-gradient" style="font-size: 3rem; margin-bottom: 1rem;">Football Matches</h1>
+    <p style="color: var(--text-secondary); font-size: 1.1rem;">Secure your spot at the biggest Nile League clashes.</p>
+  </div>
+
+  <div class="matches-container" id="matchesContainer">
+    <!-- Rendered dynamically by JS -->
+  </div>
+</main>
