@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports - Makank</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .matches-container {
+      max-width: 1000px;
+      margin: 3rem auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .match-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-glass);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+      display: flex;
+      flex-direction: column;
+    }
+    .match-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      border-color: rgba(0, 245, 255, 0.5);
+    }
+    .match-main {
+      padding: 1.5rem 2rem;
+      display: grid;
+      grid-template-columns: 2fr 1.2fr 1.2fr auto;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    @media (max-width: 900px) {
+      .match-main { grid-template-columns: 1fr; gap: 1.5rem; }
+      .match-footer { flex-wrap: wrap; gap: 1rem; }
+    }
+    .team-logos { display: flex; align-items: center; margin-right: 1.2rem; }
+    .team-logo {
+      width: 55px; height: 55px; border-radius: 50%; background: white; padding: 6px;
+      border: 2px solid var(--accent-cyan); box-shadow: 0 4px 10px rgba(0,0,0,0.3); object-fit: contain;
+    }
