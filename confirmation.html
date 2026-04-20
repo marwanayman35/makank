@@ -128,3 +128,11 @@
         </div>
       </div>
     `;
+          // Clear the cart so it cannot be double refreshed
+      setTimeout(() => {
+        AppStorage.removeItem('checkoutSession');
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
