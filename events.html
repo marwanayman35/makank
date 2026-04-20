@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Events - Makank</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .events-layout {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    .filters-sidebar {
+      position: sticky;
+      top: 100px;
+    }
+    .filter-group {
+      margin-bottom: 1.5rem;
+    }
+    .filter-group select, .filter-group input {
+      width: 100%;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--border-glass);
+      color: white;
+      padding: 0.8rem;
+      border-radius: 6px;
+      outline: none;
+    }
+    .filter-group input::placeholder {
+      color: rgba(255, 255, 255, 0.9);
+    }
+    .events-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .event-card-horizontal {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      border: 1px solid var(--border-glass);
+      border-radius: 12px;
+      transition: all var(--transition-normal);
+      align-items: center;
+    }
+    .event-card-horizontal:hover {
+      background: var(--bg-glass-hover);
+      border-color: var(--accent-cyan);
+      transform: translateX(5px);
+    }
+    .event-image {
+      width: 150px;
+      height: 100px;
+      border-radius: 8px;
+      background: var(--bg-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px dashed var(--border-glass);
+    }
+    .event-details-content {
+      flex: 1;
+    }
+    @media (max-width: 768px) {
+      .events-layout {
+        grid-template-columns: 1fr;
+      }
+      .event-card-horizontal {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .event-image {
+        width: 100%;
+        height: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"></div>
+
+  <nav>
+    <div class="container">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <button onclick="history.back();" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem;">&larr; Back</button>
+        <div class="logo"><span class="text-gradient">Makank</span></div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="categories.html" class="active">Browse Events</a>
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container" style="margin-top: 2rem;">
+    <h1 style="margin-bottom: 2rem;">Discover <span class="text-gradient">Entertainment</span></h1>
+
+    <div class="events-layout animate fade-in">
+      <!-- Filters Sidebar -->
+      <aside class="filters-sidebar glass" style="padding: 1.5rem;">
+        <h3>Filters</h3>
+        <hr style="border-color: var(--border-glass); margin: 1rem 0;">
+        
+        <div class="filter-group">
+          <label>Search Query</label>
+          <input type="text" id="filterSearch" placeholder="Search names...">
+        </div>
+
+        <div class="filter-group" style="display: none;">
+          <label>Event Type</label>
+          <select id="filterType">
+            <option value="concert">Concerts</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Location / Venue</label>
+          <input type="text" id="filterLocation" placeholder="City or stadium...">
+        </div>
+
+        <div class="filter-group">
+          <label>Sort By</label>
+          <select id="filterSort">
+            <option value="date-asc">Date (Earliest First)</option>
+            <option value="date-desc">Date (Latest First)</option>
+            <option value="name-asc">Name (A-Z)</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%;" onclick="applyFilters()">Apply Filters</button>
+      </aside>
+
+      <!-- Events Listing -->
+      <section class="events-grid" id="eventsListContainer" style="margin-top: 0 !important; padding-top: 0 !important;">
+        <!-- Rendered by JS -->
+      </section>
+    </div>
+  </main>
+
+  <footer style="margin-top: 4rem;">
+    <div class="container">
+      <p>&copy; 2026 Makank. Created for premium experiences.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Pre-fill search if navigating from home page search bar
+      const urlParams = new URLSearchParams(window.location.search);
+      const q = urlParams.get('q');
+      if (q) {
+        document.getElementById('filterSearch').value = q;
+      }
+      const t = urlParams.get('type');
+      
+      // Hide Event Type filter and hardcode to concert
+      const typeSelect = document.getElementById('filterType');
+
+      if (t && t !== 'football') {
+        typeSelect.value = t;
+      } else {
+        typeSelect.value = 'concert';
+      }
+
+      applyFilters();
+    });
+
+    function applyFilters() {
+      const q = document.getElementById('filterSearch').value.toLowerCase();
+      const t = document.getElementById('filterType').value;
+      const loc = document.getElementById('filterLocation').value.toLowerCase();
+      const sort = document.getElementById('filterSort').value;
+
+      let filtered = STATE.events.filter(ev => {
+        const matchesQuery = ev.name.toLowerCase().includes(q) || ev.id.toLowerCase().includes(q);
+        const matchesType = (t === 'all') || (ev.type.toLowerCase() === t.toLowerCase());
+        const matchesLoc = !loc || (ev.venue && ev.venue.toLowerCase().includes(loc));
+        return matchesQuery && matchesType && matchesLoc;
+      });
+
+      filtered.sort((a, b) => {
+        if (sort === 'date-asc') {
+          return new Date(a.date) - new Date(b.date);
+        } else if (sort === 'date-desc') {
+          return new Date(b.date) - new Date(a.date);
+        } else if (sort === 'name-asc') {
+          return a.name.localeCompare(b.name);
+        }
+        return 0;
+      });
+
+      renderEvents(filtered);
+    }
+
+    function renderEvents(eventsArray) {
+      const container = document.getElementById('eventsListContainer');
+      container.innerHTML = '';
+      
+      if (eventsArray.length === 0) {
+        container.innerHTML = `<div class="glass" style="padding: 3rem; text-align: center;"><h3>No events found</h3><p>Try adjusting your search filters.</p></div>`;
+        return;
+      }
+
+      eventsArray.forEach(ev => {
+        const color = ev.type === 'football' ? 'cyan' : 'purple';
+        const imgSrc = ev.headerImage || `assets/images/${ev.type === 'football' ? 'football.png' : 'concert.jpg'}`;
+        container.innerHTML += `
+          <div class="glass" style="overflow: hidden; border-radius: 24px; display: flex; transition: transform 0.3s, border-color 0.3s; border: 1px solid var(--border-glass);" onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--accent-cyan)'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-glass)'">
+            <div style="background: url('${imgSrc}') center/cover; width: 280px; min-height: 200px; flex-shrink: 0;"></div>
+            <div style="padding: 1.8rem 2rem; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+              <h3 style="font-size: 2rem; margin-top: 0; margin-bottom: 0.8rem; color: var(--text-primary); font-weight: 800; line-height: 1;">${ev.name}</h3>
+              <div style="display: flex; gap: 2rem; color: var(--text-secondary); font-size: 1rem; margin-bottom: 1rem;">
+                <span><strong>Date:</strong> ${ev.date}</span>
+                <span><strong>City:</strong> ${ev.venue}</span>
+              </div>
+              <span class="badge badge-${color}" style="text-transform: capitalize; margin-bottom: 0; width: fit-content;">${ev.type}</span>
+            </div>
+            <div style="display: flex; align-items: center; padding-right: 2rem;">
+               <a href="event_details.html?id=${encodeURIComponent(ev.id)}" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem; box-shadow: 0 10px 20px rgba(0, 245, 255, 0.4); text-align: center; white-space: nowrap;">View Details</a>
+            </div>
+          </div>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>
