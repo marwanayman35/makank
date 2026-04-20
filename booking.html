@@ -119,3 +119,58 @@
     let selectedTier = 'Regular';
     let basePrice = 60;
     let totalAmt = 60;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      // Authentication check before allowing booking
+      const sessionUser = JSON.parse(AppStorage.getItem('loggedInUser'));
+      if (!sessionUser) {
+        window.showToast('Please log in to book tickets', 'error');
+        setTimeout(() => window.location.href = 'login.html', 1500);
+        return; // Halt execution
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      currentEventId = urlParams.get('id');
+
+      if (!currentEventId) {
+        window.location.href = 'categories.html';
+        return;
+      }
+
+      let ev = STATE.events.find(e => e.id === currentEventId);
+      if (!ev) {
+        const storedEvt = JSON.parse(AppStorage.getItem('selectedEvent'));
+        if (storedEvt && storedEvt.id === currentEventId) {
+          ev = storedEvt;
+        } else {
+          window.location.href = 'categories.html';
+          return;
+        }
+      }
+
+      document.getElementById('eventTitleDisplay').textContent = `${ev.name} | ${ev.date}`;
+
+      // Pre-fill user data
+      document.getElementById('holderName').value = sessionUser.name;
+      document.getElementById('holderEmail').value = sessionUser.email;
+
+      window.setupFormValidation('bookingForm', {
+        holderName: { required: true },
+        holderEmail: { required: true, type: 'email' }
+      }, (form) => {
+        // Save checkout state
+        const sessionData = {
+          eventId: currentEventId,
+          eventName: ev.name,
+          eventDate: ev.date,
+          venue: ev.venue,
+          tier: selectedTier,
+          quantity: parseInt(document.getElementById('quantity').value),
+          total: totalAmt,
+          holderName: document.getElementById('holderName').value,
+          holderEmail: document.getElementById('holderEmail').value
+        };
+        AppStorage.setItem('checkoutSession', JSON.stringify(sessionData));
+        window.location.href = 'payment.html';
+      });
+    });
