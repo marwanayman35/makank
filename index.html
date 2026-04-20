@@ -84,3 +84,61 @@
           </a>
         `;
      });
+
+       const featuredContainer = document.getElementById('featuredContainer');
+       
+      
+       const featuredEvents = STATE.events.filter(ev => ev.featured === true);
+       
+      
+       const featuredMatches = STATE.matches.filter(m => m.featured === true);
+
+       const hasAny = featuredEvents.length > 0 || featuredMatches.length > 0;
+
+       if (!hasAny) {
+         featuredContainer.innerHTML = `
+           <div class="glass" style="padding: 3rem; text-align: center; grid-column: 1 / -1; border: 1px dashed var(--border-glass);">
+             <h3 style="color: var(--text-secondary); margin-bottom: 0.5rem;">No Featured Events Yet</h3>
+             <p style="color: rgba(255,255,255,0.4);">Check back soon for upcoming highlighted events!</p>
+           </div>`;
+         return;
+       }
+
+      
+       featuredMatches.forEach(m => {
+         featuredContainer.innerHTML += `
+           <div class="glass" style="overflow: hidden; border-radius: 24px; transition: transform 0.3s;">
+             <div style="background: url('assets/images/football.png') center/cover; width: 100%; aspect-ratio: 16/10; position: relative;">
+               <div style="position: absolute; bottom: 10px; left: 10px; display: flex; gap: 5px;">
+                 <img src="assets/Football%20Matches/${encodeURIComponent(m.homeTeamLogo)}" style="width: 40px; height: 40px; border-radius: 50%; background: white; padding: 3px; object-fit: contain; border: 2px solid var(--accent-cyan);" alt="${m.homeTeam}">
+                 <img src="assets/Football%20Matches/${encodeURIComponent(m.awayTeamLogo)}" style="width: 40px; height: 40px; border-radius: 50%; background: white; padding: 3px; object-fit: contain; border: 2px solid var(--accent-purple);" alt="${m.awayTeam}">
+               </div>
+             </div>
+             <div style="padding: 1.5rem 1.8rem;">
+               <span class="badge badge-cyan">Football</span>
+               <h3>${m.homeTeam} vs ${m.awayTeam}</h3>
+               <p style="color: var(--text-secondary); font-size: 0.9rem;">${m.stadium} | ${m.date}</p>
+               <a href="sports.html" class="btn btn-secondary" style="width: 100%; margin-top: 1rem; text-align: center; display: block;">View Match</a>
+             </div>
+           </div>
+         `;
+       });
+
+       featuredEvents.forEach(ev => {
+         const heroImg = ev.headerImage || `assets/images/${ev.type === 'football' ? 'football.png' : 'concert.jpg'}`;
+         featuredContainer.innerHTML += `
+           <div class="glass" style="overflow: hidden; border-radius: 24px; transition: transform 0.3s;">
+             <div style="background: url('${heroImg}') center/cover; width: 100%; aspect-ratio: 16/10;"></div>
+             <div style="padding: 1.5rem 1.8rem;">
+               <span class="badge badge-purple" style="text-transform: capitalize;">${ev.type}</span>
+               <h3>${ev.name}</h3>
+               <p style="color: var(--text-secondary); font-size: 0.9rem;">${ev.venue} | ${ev.date}</p>
+               <a href="event_details.html?id=${encodeURIComponent(ev.id)}" class="btn btn-secondary" style="width: 100%; margin-top: 1rem; text-align: center; display: block;">View Details</a>
+             </div>
+           </div>
+         `;
+       });
+    });
+  </script>
+</body>
+</html>
