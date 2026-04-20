@@ -107,7 +107,7 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      // Authentication check
+      
       if (!AppStorage.getItem('loggedInUser')) {
         window.location.href = 'login.html';
         return;
@@ -122,7 +122,7 @@
       const session = JSON.parse(sessionStr);
       document.getElementById('payTotal').textContent = `${session.total} EGP`;
 
-      // Auto-format Expiry Date
+      
       document.getElementById('ccExp').addEventListener('input', function (e) {
         let val = e.target.value.replace(/\D/g, '');
         if (val.length > 2) {
@@ -139,7 +139,7 @@
         ccCVC: { required: true, type: 'numeric', minLength: 3, customMessage: "3-digit CVV required." }
       }, (form) => {
         
-        // Finalize purchase - store it in User array if logged in, otherwise just push to confirmation
+
         const users = JSON.parse(AppStorage.getItem('makank_users')) || [];
         const activeUserStr = AppStorage.getItem('loggedInUser');
         
@@ -153,7 +153,7 @@
         const enteredName = document.getElementById('ccName').value.trim();
         const enteredEmail = document.getElementById('ccEmail').value.trim();
 
-        // Strict Account Validation
+        
         let hasMismatch = false;
         if (enteredEmail.toLowerCase() !== (activeUser.email || '').toLowerCase()) {
            window.showError(document.getElementById('ccEmail'), 'Email must exactly match your registered account email.');
@@ -161,7 +161,7 @@
         }
         if (hasMismatch) return;
 
-        // Create Mock Ticket Object
+       
         const ticket = {
            ticketId: 'TKT-' + Math.floor(10000 + Math.random() * 90000),
            event: session.eventName,
@@ -182,18 +182,18 @@
               users[userIndex].tickets.push(ticket);
               AppStorage.setItem('makank_users', JSON.stringify(users));
               
-              // update local active state
+              
               activeUser.tickets = users[userIndex].tickets;
               AppStorage.setItem('loggedInUser', JSON.stringify(activeUser));
            } else {
-              // Graceful fallback for mock sessions
+              
               if(!activeUser.tickets) activeUser.tickets = [];
               activeUser.tickets.push(ticket);
               AppStorage.setItem('loggedInUser', JSON.stringify(activeUser));
            }
         }
         
-        // Add exact generated ticket ID to session so Confirmation page sees it
+       
         session.issuedTicketId = ticket.ticketId;
         AppStorage.setItem('checkoutSession', JSON.stringify(session));
 
