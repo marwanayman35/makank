@@ -59,3 +59,75 @@
     </p>
   </div>
 </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Makank. Created for premium experiences.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    function togglePasswordVisibility(inputId, iconEl) {
+      const input = document.getElementById(inputId);
+      // Flaticon links
+      const showIcon = "https://cdn-icons-png.flaticon.com/512/159/159604.png";
+      const hideIcon = "https://cdn-icons-png.flaticon.com/512/565/565655.png";
+      
+      if (input.type === "password") {
+        input.type = "text";
+        iconEl.src = hideIcon;
+      } else {
+        input.type = "password";
+        iconEl.src = showIcon;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedEmail = AppStorage.getItem('rememberedEmail');
+      if (savedEmail) {
+        document.getElementById('email').value = savedEmail;
+        document.getElementById('rememberMe').checked = true;
+      }
+
+      window.setupFormValidation('loginForm', {
+        email: { required: true, type: 'email' },
+        password: { required: true }
+      }, (form) => {
+        // Clear previous errors just in case
+        window.clearError(document.getElementById('email'));
+        window.clearError(document.getElementById('password'));
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const pwdInput = document.getElementById('password');
+        const emailInput = document.getElementById('email');
+        
+        let users = JSON.parse(AppStorage.getItem('makank_users')) || [];
+
+        // Identify if email exists
+        const emailExists = users.some(u => u.email === email);
+
+        if (!emailExists) {
+            window.showError(emailInput, 'No user found with this email address');
+            return;
+        }
+
+        const user = users.find(u => u.email === email && u.password === password);
+        if (user) {
+          if (document.getElementById('rememberMe').checked) {
+             AppStorage.setItem('rememberedEmail', email);
+          } else {
+             AppStorage.removeItem('rememberedEmail');
+          }
+          AppStorage.setItem('loggedInUser', JSON.stringify(user));
+          window.showToast('Login successful!');
+          setTimeout(() => window.location.href = 'user.html', 1500);
+        } else {
+          window.showError(pwdInput, 'Incorrect password. Try again or reset it.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
