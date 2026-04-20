@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Details - Makank</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .details-hero {
+      position: relative; height: 40vh; min-height: 400px; border-radius: 12px;
+      overflow: hidden; margin-bottom: 3rem; display: flex; align-items: flex-end; padding: 3rem;
+    }
+    .details-hero::before {
+      content: ''; position: absolute; top:0; left:0; right:0; bottom:0;
+      background: linear-gradient(to top, var(--bg-dark) 0%, transparent 100%); z-index: 1;
+    }
+    .details-hero-img {
+      position: absolute; top:0; left:0; right:0; bottom:0;
+      background-size: cover !important; background-position: center !important; z-index: 0; opacity: 1;
+    }
+    .details-content { position: relative; z-index: 2; }
+    .layout-splitter { display: grid; grid-template-columns: 2fr 1fr; gap: 3rem; }
+    .map-container {
+      background: rgba(0,0,0,0.4); border: 1px dashed var(--border-glass); height: 250px;
+      border-radius: 12px; margin-top: 1rem; display: flex; align-items: center;
+      justify-content: center; position: relative; overflow: hidden;
+    }
+    .ticket-widget { position: sticky; top: 100px; padding: 2rem; border-top: 4px solid var(--accent-cyan); }
+    .gallery-section { margin-top: 3rem; }
+    .gallery-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem; margin-top: 1rem;
+    }
+    .gallery-grid img {
+      width: 100%; height: 180px; object-fit: cover; border-radius: 12px;
+      border: 1px solid var(--border-glass); cursor: pointer; transition: all 0.3s;
+    }
+    .gallery-grid img:hover { transform: scale(1.03); border-color: var(--accent-cyan); }
+    @media (max-width: 900px) { .layout-splitter { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"></div>
+
+  <nav>
+    <div class="container">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <button onclick="history.back();" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem;">&larr; Back</button>
+        <div class="logo"><span class="text-gradient">Makank</span></div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="categories.html">Browse Events</a>
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container" style="margin-top: 2rem;">
+    <div id="loading" style="text-align: center; padding: 4rem;">Loading event data...</div>
+    <div id="eventWrapper" style="display: none;" class="animate fade-in">
+      
+      <!-- Hero Header -->
+      <div class="details-hero glass">
+        <div class="details-hero-img" id="eventHeroBg"></div>
+        <div class="details-content">
+          <span class="badge" id="eventTypeBadge" style="margin-bottom: 1rem;">Category</span>
+          <h1 id="eventNameUI" style="font-size: 3.5rem; margin-bottom: 0.5rem;">Event Name</h1>
+          <p id="eventMetaUI" style="font-size: 1.1rem; color: var(--text-secondary);">Date | Venue</p>
+        </div>
+      </div>
+
+      <div class="layout-splitter">
+        <!-- Main Description -->
+        <div>
+          <h2>About <span class="text-gradient">The Event</span></h2>
+          <p id="eventDescriptionUI" style="margin-top: 1.5rem; line-height: 1.8; color: var(--text-secondary);">
+            Join us for an unforgettable experience!
+          </p>
+
+          <!-- Gallery Section -->
+          <div id="gallerySection" class="gallery-section" style="display: none;">
+            <h3>Event <span class="text-gradient">Gallery</span></h3>
+            <div class="gallery-grid" id="galleryGrid"></div>
+          </div>
+
+          <h3 style="margin-top: 3rem; margin-bottom: 1rem;">Location Details</h3>
+          <div style="font-size: 1.1rem; font-weight: bold;" id="eventMapVenue">Venue Name</div>
+          <div class="map-container" id="mapContainer">
+            <div id="mapFallback" style="z-index: 2; display: flex; flex-direction: column; align-items: center; color: var(--accent-cyan);">
+              <span style="font-size: 2rem; margin-bottom: 0.5rem;">📍</span>
+              <span style="font-weight: bold;">Map not available</span>
+            </div>
+            <svg style="position: absolute; width: 100%; height: 100%;" xmlns="http://www.w3.org/2000/svg">
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+              </pattern>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+              <circle cx="50%" cy="50%" r="60" fill="rgba(0, 245, 255, 0.1)" stroke="rgba(0, 245, 255, 0.3)"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Ticket Widget -->
+        <div>
+          <div class="glass ticket-widget">
+            <h3 style="margin-bottom: 1.5rem;">Tickets Available</h3>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-glass);">
+              <span style="color: var(--text-secondary);">Base Price</span>
+              <strong id="eventPriceUI">From 60.00 EGP</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-glass);">
+              <span style="color: var(--text-secondary);">Status</span>
+              <strong style="color: var(--success);">Selling Fast</strong>
+            </div>
+            <button class="btn btn-primary" style="width: 100%; font-size: 1.1rem; padding: 1rem;" onclick="goToBooking()">Book Ticket Now</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
