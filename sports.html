@@ -42,4 +42,43 @@
     .team-logo {
       width: 55px; height: 55px; border-radius: 50%; background: white; padding: 6px;
       border: 2px solid var(--accent-cyan); box-shadow: 0 4px 10px rgba(0,0,0,0.3); object-fit: contain;
-    }
+    } .team-logo:last-child { margin-left: -20px; border-color: var(--accent-purple); }
+ .team-names { font-size: 1.2rem; font-weight: 700; }
+ .vs-text { color: var(--text-secondary); font-size: 0.85rem; margin: 0 0.5rem; font-weight: 400; }
+ .match-info-block { display: flex; align-items: center; gap: 0.8rem; }
+ .info-icon svg { width: 24px; height: 24px; stroke: var(--accent-cyan); }
+ .info-text { display: flex; flex-direction: column; }
+ .info-label { font-weight: bold; font-size: 1rem; }
+ .info-sub { color: var(--text-secondary); font-size: 0.85rem; }
+ .btn-status { padding: 0.8rem 2rem; border-radius: 50px; font-weight: bold; text-align: center; min-width: 160px; }
+ .btn-available { background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple)); color: #fff; border: none; cursor: pointer; font-size: 1rem; transition: all 0.3s; }
+ .btn-available:hover { box-shadow: 0 0 15px rgba(0, 245, 255, 0.4); transform: scale(1.05); }
+ .btn-disabled { background: rgba(0, 140, 150, 0.15); color: var(--accent-cyan); border: 1px solid rgba(0, 245, 255, 0.3); pointer-events: none; font-size: 1rem; }
+ .match-footer {
+   padding: 1rem 2rem; background: rgba(255, 255, 255, 0.08);
+   border-top: 1px solid rgba(255, 255, 255, 0.05);
+   border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;
+   display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 0.85rem;
+ }
+     .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .dot-green { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .dot-red { background: var(--error); box-shadow: 0 0 8px var(--error); }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"></div>
+
+  <nav>
+    <div class="container">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <a href="categories.html" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; text-decoration: none;">&larr; Back</a>
+        <div class="logo"><span class="text-gradient">Makank</span></div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="categories.html" class="active">Browse Events</a>
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+      </div>
+    </div>
+  </nav>
