@@ -72,4 +72,30 @@
             <span>VIP</span> <strong>$350</strong>
           </button>
         </div>
+
+        <div style="margin-bottom: 3rem;">
+          <h3 style="margin-bottom: 1rem;">2. Ticket Quantity</h3>
+          <div class="form-group">
+            <select id="quantity" onchange="calculateTotal()" style="-webkit-appearance: none; appearance: none; height: 65px; border-radius: 50px; padding: 0 2rem; font-size: 1.2rem; background: rgba(0, 0, 0, 0.03) url('data:image/svg+xml;utf8,<svg fill=%22%23123538%22 height=%2230%22 viewBox=%220 0 24 24%22 width=%2230%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>') no-repeat right 1.5rem center;">
+              <option value="1">1 Ticket</option>
+              <option value="2">2 Tickets</option>
+              <option value="3">3 Tickets</option>
+              <option value="4">4 Tickets</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 3rem;">
+          <h3 style="margin-bottom: 1rem;">3. Ticket Holder Info</h3>
+          <div class="grid grid-2" style="gap: 1rem;">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="holderName" placeholder="Your Name">
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="holderEmail" placeholder="your@email.com">
+            </div>
+          </div>
+        </div>
         
