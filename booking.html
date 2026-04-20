@@ -174,3 +174,20 @@
         window.location.href = 'payment.html';
       });
     });
+    
+        function selectTier(btn, tier, price) {
+      document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedTier = tier;
+      basePrice = price;
+      calculateTotal();
+    }
+
+    function calculateTotal() {
+      const qty = parseInt(document.getElementById('quantity').value) || 1;
+      totalAmt = basePrice * qty;
+      document.getElementById('totalPriceUI').textContent = `$${totalAmt}`;
+    }
+  </script>
+</body>
+</html>
