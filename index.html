@@ -25,3 +25,38 @@
       </div>
     </div>
   </nav>
+   <main>
+   <!-- Hero Section -->
+   <section class="hero container">
+     <div class="hero-content animate delay-1" style="max-width: 580px;">
+       <h1>Find Your <span class="text-gradient">Next Ticket</span>.</h1>
+       <p>Book premium tickets for the most electrifying football matches and legendary concerts around the globe.</p>
+       <form action="events.html" method="GET" style="display: flex; gap: 1rem; margin-top: 2rem; background: rgba(255, 255, 255, 0.95); padding: 0.5rem 0.5rem 0.5rem 1.5rem; border-radius: 50px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+         <input type="text" name="q" placeholder="Search events, artists, teams..." style="flex: 1; border: none; background: transparent; color: black; font-weight: 500; font-size: 1.1rem; outline: none;">
+         <button type="submit" class="btn btn-primary" style="border-radius: 50px; padding: 0.8rem 2rem;">Search</button>
+       </form>
+     </div>
+     <div class="hero-image animate delay-2">
+       <img src="assets/hero section main.png" alt="Hero Visual" style="width: 110%; max-width: 900px; height: auto; filter: drop-shadow(0 24px 48px rgba(0,0,0,0.18)); transform: translateY(-20px); margin-left: 80px;">
+     </div>
+   </section>
+
+   <!-- Top Categories -->
+   <section class="container animate delay-2">
+     <h2 style="margin-bottom: 2rem;">Browse <span class="text-gradient">Categories</span></h2>
+     <div class="grid grid-2" id="categoriesContainer">
+       <!-- Rendered by JS -->
+     </div>
+   </section>
+
+   <!-- Upcoming Events Section -->
+   <section class="container animate delay-2" style="margin-top: 3rem;">
+     <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+       <h2>Upcoming <span class="text-gradient">Events</span></h2>
+       <a href="categories.html" style="color: var(--accent-cyan); font-weight: bold; font-size: 0.9rem;">View All &rarr;</a>
+     </div>
+     <div class="grid grid-3" id="featpage 2uredContainer">
+       <!-- Rendered by JS -->
+     </div>
+   </section>
+ </main>
