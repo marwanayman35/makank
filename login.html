@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Makank</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .auth-container {
+      max-width: 450px;
+      margin: 4rem auto;
+      padding: 3rem;
+    }
+  </style>
+</head>
+<body>
+<div class="bg-blobs"></div>
+
+<nav>
+  <div class="container">
+    <div class="logo">
+      <span class="text-gradient">Makank</span>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="categories.html">Browse Events</a>
+      <a href="login.html" class="active">Login</a>
+      <a href="register.html">Register</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  <div class="glass auth-container animate fade-in">
+    <h2 class="text-center" style="margin-bottom: 2rem;">Welcome <span class="text-gradient">Back</span></h2>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <div class="password-container">
+          <input type="password" id="password" placeholder="Enter your password">
+          <img src="https://cdn-icons-png.flaticon.com/512/159/159604.png" alt="Show Password" class="toggle-password" onclick="togglePasswordVisibility('password', this)">
+        </div>
+      </div>
+      <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: -0.5rem;">
+        <input type="checkbox" id="rememberMe" style="width: auto;">
+        <label for="rememberMe" style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">Remember me</label>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Log In</button>
+      <div style="text-align: center; margin-top: 1.5rem;">
+         <a href="admin_login.html" class="btn btn-secondary" style="width: 100%;">Login as an admin</a>
+      </div>
+    </form>
+    <p class="text-center" style="margin-top: 2rem; font-size: 0.9rem;">
+      Don't have an account? <a href="register.html" style="color: var(--accent-cyan); font-weight: 600;">Register here</a>
+    </p>
+  </div>
+</main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Makank. Created for premium experiences.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+    function togglePasswordVisibility(inputId, iconEl) {
+      const input = document.getElementById(inputId);
+      // Flaticon links
+      const showIcon = "https://cdn-icons-png.flaticon.com/512/159/159604.png";
+      const hideIcon = "https://cdn-icons-png.flaticon.com/512/565/565655.png";
+      
+      if (input.type === "password") {
+        input.type = "text";
+        iconEl.src = hideIcon;
+      } else {
+        input.type = "password";
+        iconEl.src = showIcon;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedEmail = AppStorage.getItem('rememberedEmail');
+      if (savedEmail) {
+        document.getElementById('email').value = savedEmail;
+        document.getElementById('rememberMe').checked = true;
+      }
+
+      window.setupFormValidation('loginForm', {
+        email: { required: true, type: 'email' },
+        password: { required: true }
+      }, (form) => {
+        // Clear previous errors just in case
+        window.clearError(document.getElementById('email'));
+        window.clearError(document.getElementById('password'));
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const pwdInput = document.getElementById('password');
+        const emailInput = document.getElementById('email');
+        
+        let users = JSON.parse(AppStorage.getItem('makank_users')) || [];
+
+        // Identify if email exists
+        const emailExists = users.some(u => u.email === email);
+
+        if (!emailExists) {
+            window.showError(emailInput, 'No user found with this email address');
+            return;
+        }
+
+        const user = users.find(u => u.email === email && u.password === password);
+        if (user) {
+          if (document.getElementById('rememberMe').checked) {
+             AppStorage.setItem('rememberedEmail', email);
+          } else {
+             AppStorage.removeItem('rememberedEmail');
+          }
+          AppStorage.setItem('loggedInUser', JSON.stringify(user));
+          window.showToast('Login successful!');
+          setTimeout(() => window.location.href = 'user.html', 1500);
+        } else {
+          window.showError(pwdInput, 'Incorrect password. Try again or reset it.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
