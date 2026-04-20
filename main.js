@@ -165,3 +165,61 @@ window.showError = function(inputElement, message) {
   errorElement.style.display = '';
   inputElement.classList.add('is-invalid');
 }
+window.clearError = function(inputElement) {
+  inputElement.classList.remove('is-invalid');
+  const formGroup = inputElement.closest('.form-group');
+  const errorElement = formGroup ? formGroup.querySelector('.error-message') : inputElement.nextElementSibling;
+  if (errorElement && errorElement.classList.contains('error-message')) {
+    errorElement.remove();
+  }
+}
+
+function isValidEmail(email) {
+  return /^[a-zA-Z0-9]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function isValidName(name) {
+  return /^[a-zA-Z\s]+$/.test(name);
+}
+
+function isNumeric(val) {
+  return /^\d+$/.test(val);
+}
+
+function isValidExpiry(val) {
+  if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(val)) return false;
+  const mm = parseInt(val.substring(0, 2), 10);
+  const yy = parseInt(val.substring(3, 5), 10);
+  const now = new Date();
+  const exp = new Date(2000 + yy, mm - 1);
+  return exp >= new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+function isValidFutureDate(val) {
+  if (!val) return false;
+  const target = new Date(val);
+  const now = new Date();
+  now.setHours(0,0,0,0);
+  return target >= now;
+}
+
+function isValidTime(val) {
+  return /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM|am|pm)$|^([01]?[0-9]|2[0-3]):[0-5][0-9]((:[0-5][0-9])?)$/.test(val);
+}
+
+window.setupFormValidation = (formId, rules, onSuccess) => {
+  const form = document.getElementById(formId);
+  if (!form) return;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    let isValid = true;
+
+    Object.keys(rules).forEach(fieldId => {
+      const input = document.getElementById(fieldId);
+      if (!input) return;
+
+      const value = input.value.trim();
+      const rule = rules[fieldId];
+
+      clearError(input);
