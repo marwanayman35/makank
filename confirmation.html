@@ -41,3 +41,98 @@
   margin-top: 2rem;
   text-align: left;
 }
+.ticket-stub::after {
+  content: '';
+  position: absolute;
+  right: -15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  background: var(--bg-dark);
+  border-radius: 50%;
+  border-left: 1px dashed rgba(255,255,255,0.3);
+}
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"></div>
+
+  <nav>
+    <div class="container">
+      <div class="logo">
+        <span class="text-gradient">Makank</span>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+      </div>
+    </div>
+  </nav>
+   <main class="container">
+   <div class="confirm-layout glass animate fade-in" style="padding: 4rem 2rem;">
+     <div class="check-circle">
+       <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+         <polyline points="20 6 9 17 4 12"></polyline>
+       </svg>
+     </div>
+     <h1 style="margin-bottom: 1rem;">Payment <span class="text-gradient" style="background-image: linear-gradient(135deg, #00ff88, #00f5ff);">Successful</span></h1>
+     <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 2rem;">Your tickets have been issued and sent to your email.</p>
+     
+     <div class="ticket-stub" id="ticketVisualizer">
+       <!-- Rendered by JS -->
+     </div>
+     
+     <div style="margin-top: 3rem; display: flex; gap: 1rem; justify-content: center;">
+       <a href="categories.html" class="btn btn-secondary">Browse More</a>
+       <a href="user.html" class="btn btn-primary">Go to Dashboard</a>
+     </div>
+   </div>
+ </main>
+ <script src="js/main.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const sessionStr = AppStorage.getItem('checkoutSession');
+    if (!sessionStr) {
+      window.location.href = 'index.html';
+      return;
+    }
+    
+    const session = JSON.parse(sessionStr);
+
+    document.getElementById('ticketVisualizer').innerHTML = `
+      <div style="width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+          <div>
+            <h3 style="color: var(--accent-cyan); font-size: 1.8rem; margin: 0; line-height: 1.2;">${session.eventName}</h3>
+          </div>
+          <span style="background: rgba(0,245,255,0.1); color: var(--text-primary); padding: 0.4rem 1rem; border-radius: 30px; font-weight: bold; font-size: 0.85rem; border: 1px solid var(--accent-cyan);">CONFIRMED</span>
+        </div>
+        
+        <div class="grid grid-2" style="gap: 1.5rem; text-align: left;">
+          <div>
+            <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem;">Date</div>
+            <div style="font-weight: 600; color: var(--text-primary); font-size: 1.1rem;">${session.eventDate}</div>
+          </div>
+          <div>
+            <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem;">Venue</div>
+            <div style="font-weight: 600; color: var(--text-primary); font-size: 1.1rem;">${session.venue}</div>
+          </div>
+          <div>
+            <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem;">Ticket Section</div>
+            <div style="font-weight: 600; color: var(--text-primary); font-size: 1.1rem;">${session.tier} <span style="opacity: 0.6; font-size: 0.9rem; margin-left: 0.5rem;">(Qty: ${session.quantity})</span></div>
+          </div>
+          <div>
+            <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem;">Ticket ID</div>
+            <div style="font-weight: 600; color: var(--text-primary); font-family: monospace; font-size: 1.1rem; letter-spacing: 1px;">${session.issuedTicketId}</div>
+          </div>
+        </div>
+      </div>
+    `;
+          // Clear the cart so it cannot be double refreshed
+      setTimeout(() => {
+        AppStorage.removeItem('checkoutSession');
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
