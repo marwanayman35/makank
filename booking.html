@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking - Makank</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .booking-layout {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem;
+    }
+    .tier-btn {
+      padding: 1rem;
+      border: 3px solid var(--border-glass);
+      border-radius: 50px;
+      background: transparent;
+      color: black;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+    .tier-btn.selected {
+      background: rgba(0, 245, 255, 0.15);
+      border-color: var(--accent-cyan);
+    }
+    .summary-box {
+      background: rgba(0,0,0,0.05);
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-top: 2rem;
+      border-left: 4px solid var(--accent-cyan);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"></div>
+
+  <nav>
+    <div class="container">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <a href="javascript:history.back()" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; text-decoration: none;">&larr; Cancel</a>
+        <div class="logo"><span class="text-gradient">Makank</span></div>
+      </div>
+      <div class="nav-links">
+        <span style="color: var(--text-secondary); font-size: 0.9rem;">Secure Checkout</span>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="glass booking-layout animate fade-in" style="margin-top: 4rem;">
+      <h2 style="margin-bottom: 0.5rem;">Configure <span class="text-gradient">Booking</span></h2>
+      <p id="eventTitleDisplay" style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 3rem;">Loading...</p>
+
+      <form id="bookingForm">
+        
+        <div style="margin-bottom: 3rem;">
+          <h3 style="margin-bottom: 1rem;">1. Select Ticket Tier</h3>
+          <button type="button" class="tier-btn selected" id="tierBtnReg" onclick="selectTier(this, 'Regular', 60)">
+            <span>Regular</span> <strong id="lblRegPrice">60 EGP</strong>
+          </button>
+          <button type="button" class="tier-btn" id="tierBtnPrem" onclick="selectTier(this, 'Premium', 150)">
+            <span>Premium</span> <strong id="lblPremPrice">150 EGP</strong>
+          </button>
+          <button type="button" class="tier-btn" id="tierBtnVip" onclick="selectTier(this, 'VIP', 350)">
+            <span>VIP</span> <strong id="lblVipPrice">350 EGP</strong>
+          </button>
+        </div>
+
+        <div style="margin-bottom: 3rem;">
+          <h3 style="margin-bottom: 1rem;">2. Ticket Quantity</h3>
+          <div class="form-group">
+            <select id="quantity" onchange="calculateTotal()" style="-webkit-appearance: none; appearance: none; height: 65px; border-radius: 50px; padding: 0 2rem; font-size: 1.2rem; background: rgba(0, 0, 0, 0.03) url('data:image/svg+xml;utf8,<svg fill=%22%23123538%22 height=%2230%22 viewBox=%220 0 24 24%22 width=%2230%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>') no-repeat right 1.5rem center;">
+              <option value="1">1 Ticket</option>
+              <option value="2">2 Tickets</option>
+              <option value="3">3 Tickets</option>
+              <option value="4">4 Tickets</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 3rem;">
+          <h3 style="margin-bottom: 1rem;">3. Ticket Holder Info</h3>
+          <div class="grid grid-2" style="gap: 1rem;">
+            <div class="form-group">
+              <label>Full Name</label>
+              <input type="text" id="holderName" placeholder="Your Name">
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="holderEmail" placeholder="your@email.com">
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-box">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 0.9rem; color: var(--text-secondary);">Total Amount Due</div>
+              <div id="totalPriceUI" style="font-size: 2rem; font-weight: bold; color: black;">60 EGP</div>
+            </div>
+            <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem;">Proceed to Payment</button>
+          </div>
+        </div>
+      </form>
+
+    </div>
+  </main>
+
+  <script src="js/main.js"></script>
+  <script>
+    let currentEventId = null;
+    let selectedTier = 'Regular';
+    let basePrice = 60;
+    let totalAmt = 60;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Authentication check before allowing booking
+      const sessionUser = JSON.parse(AppStorage.getItem('loggedInUser'));
+      if (!sessionUser) {
+        window.showToast('Please log in to book tickets', 'error');
+        setTimeout(() => window.location.href = 'login.html', 1500);
+        return; // Halt execution
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      currentEventId = urlParams.get('id');
+
+      if (!currentEventId) {
+        window.location.href = 'categories.html';
+        return;
+      }
+
+      let ev = STATE.events.find(e => e.id === currentEventId);
+      if (!ev) {
+        const storedEvt = JSON.parse(AppStorage.getItem('selectedEvent'));
+        if (storedEvt && storedEvt.id === currentEventId) {
+          ev = storedEvt;
+        } else {
+          window.location.href = 'categories.html';
+          return;
+        }
+      }
+
+      document.getElementById('eventTitleDisplay').textContent = `${ev.name} | ${ev.date}`;
+
+      // Dynamically load base price and calculate scaling tiers
+      const startPrice = (ev && ev.price) ? parseFloat(ev.price) : 60;
+      const premiumPrice = startPrice + 500;
+      const vipPrice = startPrice + 1000;
+
+      // Reset DOM defaults to dynamic math
+      document.getElementById('lblRegPrice').textContent = `${startPrice} EGP`;
+      document.getElementById('lblPremPrice').textContent = `${premiumPrice} EGP`;
+      document.getElementById('lblVipPrice').textContent = `${vipPrice} EGP`;
+
+      document.getElementById('tierBtnReg').setAttribute('onclick', `selectTier(this, 'Regular', ${startPrice})`);
+      document.getElementById('tierBtnPrem').setAttribute('onclick', `selectTier(this, 'Premium', ${premiumPrice})`);
+      document.getElementById('tierBtnVip').setAttribute('onclick', `selectTier(this, 'VIP', ${vipPrice})`);
+
+      // Initialize defaults to Regular
+      basePrice = startPrice;
+      totalAmt = startPrice;
+      document.getElementById('totalPriceUI').textContent = `${totalAmt} EGP`;
+
+      // Pre-fill user data
+      document.getElementById('holderName').value = sessionUser.name;
+      document.getElementById('holderEmail').value = sessionUser.email;
+
+      window.setupFormValidation('bookingForm', {
+        holderName: { required: true, type: 'name' },
+        holderEmail: { required: true, type: 'email' }
+      }, (form) => {
+        const enteredName = document.getElementById('holderName').value.trim();
+        const enteredEmail = document.getElementById('holderEmail').value.trim();
+
+        // Strict Account Validation
+        let hasMismatch = false;
+        if (enteredName.toLowerCase() !== sessionUser.name.toLowerCase()) {
+           window.showError(document.getElementById('holderName'), 'Name must exactly match your registered account name.');
+           hasMismatch = true;
+        }
+        if (enteredEmail.toLowerCase() !== (sessionUser.email || '').toLowerCase()) {
+           window.showError(document.getElementById('holderEmail'), 'Email must exactly match your registered account email.');
+           hasMismatch = true;
+        }
+        if (hasMismatch) return;
+
+        // Save checkout state
+        const sessionData = {
+          eventId: currentEventId,
+          eventName: ev.name,
+          eventDate: ev.date,
+          venue: ev.venue,
+          tier: selectedTier,
+          quantity: parseInt(document.getElementById('quantity').value),
+          total: totalAmt,
+          holderName: enteredName,
+          holderEmail: enteredEmail
+        };
+        AppStorage.setItem('checkoutSession', JSON.stringify(sessionData));
+        window.location.href = 'payment.html';
+      });
+    });
+
+    function selectTier(btn, tier, price) {
+      document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedTier = tier;
+      basePrice = price;
+      calculateTotal();
+    }
+
+    function calculateTotal() {
+      const qty = parseInt(document.getElementById('quantity').value) || 1;
+      totalAmt = basePrice * qty;
+      document.getElementById('totalPriceUI').textContent = `${totalAmt} EGP`;
+    }
+  </script>
+</body>
+</html>
