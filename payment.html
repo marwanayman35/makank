@@ -52,7 +52,7 @@
   <main class="container">
     <div class="glass payment-layout animate fade-in">
       <h2 style="margin-bottom: 0.5rem;">Secure <span class="text-gradient">Payment</span></h2>
-      <p style="color: var(--text-secondary); margin-bottom: 2rem;">Total Amount: <strong id="payTotal" style="color: black; font-size: 1.5rem; margin-left: 0.5rem;">$0</strong></p>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem;">Total Amount: <strong id="payTotal" style="color: black; font-size: 1.5rem; margin-left: 0.5rem;">0 EGP</strong></p>
 
       <div class="payment-tabs">
         <div class="payment-tab active" id="tabCard">Credit Card</div>
@@ -62,6 +62,10 @@
         <div class="form-group">
           <label>Name on Card</label>
           <input type="text" id="ccName" placeholder="Cardholder Name">
+        </div>
+        <div class="form-group">
+          <label>Account Verification Email</label>
+          <input type="email" id="ccEmail" placeholder="Your registered account email">
         </div>
         <div class="form-group">
           <label>Card Number</label>
@@ -116,7 +120,7 @@
       }
       
       const session = JSON.parse(sessionStr);
-      document.getElementById('payTotal').textContent = `$${session.total}`;
+      document.getElementById('payTotal').textContent = `${session.total} EGP`;
 
       // Auto-format Expiry Date
       document.getElementById('ccExp').addEventListener('input', function (e) {
@@ -128,16 +132,35 @@
       });
 
       window.setupFormValidation('paymentForm', {
-        ccName: { required: true, customMessage: "Cardholder name is absolutely required for payment." },
-        ccNumber: { required: true, minLength: 16, customMessage: "Card number must be exactly 16 digits." },
-        ccExp: { required: true, minLength: 5, customMessage: "Format MM/YY required." },
-        ccCVC: { required: true, minLength: 3, customMessage: "3-digit CVV required." }
+        ccName: { required: true, type: 'name', customMessage: "Cardholder name is required and should only contain letters." },
+        ccEmail: { required: true, type: 'email' },
+        ccNumber: { required: true, type: 'numeric', minLength: 16, customMessage: "Card number must be exactly 16 digits." },
+        ccExp: { required: true, type: 'expiry', minLength: 5, customMessage: "Format MM/YY required and must be in the future." },
+        ccCVC: { required: true, type: 'numeric', minLength: 3, customMessage: "3-digit CVV required." }
       }, (form) => {
         
         // Finalize purchase - store it in User array if logged in, otherwise just push to confirmation
         const users = JSON.parse(AppStorage.getItem('makank_users')) || [];
         const activeUserStr = AppStorage.getItem('loggedInUser');
         
+        if (!activeUserStr) {
+           window.showToast('Session expired. Please log in again.', 'error');
+           setTimeout(() => window.location.href = 'login.html', 1500);
+           return;
+        }
+
+        const activeUser = JSON.parse(activeUserStr);
+        const enteredName = document.getElementById('ccName').value.trim();
+        const enteredEmail = document.getElementById('ccEmail').value.trim();
+
+        // Strict Account Validation
+        let hasMismatch = false;
+        if (enteredEmail.toLowerCase() !== (activeUser.email || '').toLowerCase()) {
+           window.showError(document.getElementById('ccEmail'), 'Email must exactly match your registered account email.');
+           hasMismatch = true;
+        }
+        if (hasMismatch) return;
+
         // Create Mock Ticket Object
         const ticket = {
            ticketId: 'TKT-' + Math.floor(10000 + Math.random() * 90000),
