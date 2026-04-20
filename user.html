@@ -104,4 +104,61 @@
       <p>&copy; 2026 Makank. Created for premium experiences.</p>
     </div>
   </footer>
-  
+
+  <script src="js/main.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loggedInUserStr = AppStorage.getItem('loggedInUser');
+      if (!loggedInUserStr) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const loggedInUser = JSON.parse(loggedInUserStr);
+      
+      // Update greeting with user's name
+      document.getElementById('userGreeting').innerHTML = `Welcome back, <span class="text-gradient">${loggedInUser.name}</span>!`;
+      
+      // Fill the profile form fields
+      document.getElementById('fullname').value = loggedInUser.name;
+      document.getElementById('email').value = loggedInUser.email || '';
+
+      // Render tickets dynamically
+      renderUserTickets(loggedInUser);
+
+      // Listen for profile changes
+      window.setupFormValidation('profileForm', {
+        fullname: { required: true, minLength: 3 },
+        email: { required: true, type: 'email' }
+      }, (form) => {
+        const newName = document.getElementById('fullname').value.trim();
+        const newEmail = document.getElementById('email').value.trim();
+        const newPass = document.getElementById('newPassword').value;
+
+        // Update local state
+        loggedInUser.name = newName;
+        loggedInUser.email = newEmail;
+        if (newPass.length > 0) {
+          loggedInUser.password = newPass;
+        }
+
+        AppStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
+
+        // Sync to global users array
+        const users = JSON.parse(AppStorage.getItem('makank_users')) || [];
+        // Determine search base (email can change so we reference id or previous email)
+        const userIndex = users.findIndex(u => (u.id === loggedInUser.id) || (u.email === JSON.parse(loggedInUserStr).email));
+        
+        if (userIndex > -1) {
+          users[userIndex].name = newName;
+          users[userIndex].email = newEmail;
+          if (newPass.length > 0) users[userIndex].password = newPass;
+          AppStorage.setItem('makank_users', JSON.stringify(users));
+        }
+
+        // Update UI
+        document.getElementById('userGreeting').innerHTML = `Welcome back, <span class="text-gradient">${newName}</span>!`;
+        window.showToast('Profile settings saved successfully!', 'success');
+        document.getElementById('newPassword').value = ''; // clear password field
+      });
+    });
