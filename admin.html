@@ -1,3 +1,268 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Makank</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .data-table th, .data-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-glass); vertical-align: middle; }
+    .data-table th { color: var(--text-secondary); font-weight: 600; }
+    .data-table tr:hover { background: rgba(255,255,255,0.02); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal { background: var(--bg-surface); padding: 2rem; border-radius: 16px; width: 90%; max-width: 500px; border: 1px solid var(--border-glass); }
+    .sidebar a { border-radius: 50px; }
+    .ticket-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; }
+    .badge-tickets { background: rgba(0, 245, 255, 0.15); color: var(--accent-cyan); }
+    .badge-none { background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); }
+    .drop-zone { border: 2px dashed var(--border-glass); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s; color: var(--text-secondary); }
+    .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent-cyan); background: rgba(0, 245, 255, 0.05); color: var(--accent-cyan); }
+    .drop-zone img { max-height: 150px; border-radius: 8px; margin-top: 1rem; }
+    .gallery-preview { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+    .gallery-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-glass); }
+    .featured-toggle { cursor: pointer; padding: 0.3rem 0.6rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; border: none; transition: all 0.3s; }
+    .featured-on { background: rgba(0, 245, 255, 0.2); color: var(--accent-cyan); }
+    .featured-off { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"></div>
+  <nav>
+    <div class="container">
+      <div class="logo">
+        <span class="text-gradient">Makank</span> <span style="font-size: 0.85rem; border: 2px solid var(--accent-purple); padding: 3px 8px; border-radius: 6px; margin-left: 0.2rem; color: var(--accent-purple); font-weight: 800;">ADMIN</span>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">View Site</a>
+        <a href="#" onclick="adminLogout()">Logout Admin</a>
+      </div>
+    </div>
+  </nav>
 
-</html>
+  <main class="container">
+    <section>
+      <div class="animate"><h1>Dashboard Control <span class="text-gradient">Center</span></h1></div>
+
+      <div class="grid grid-3 mt-4 animate delay-1" style="margin-top: 2rem;">
+        <div class="glass card stat-card">
+          <h3 style="color: var(--accent-purple);" id="statUsers">0</h3>
+          <p>Registered Users</p>
+        </div>
+        <div class="glass card stat-card">
+          <h3 style="color: var(--accent-cyan);" id="statTickets">0</h3>
+          <p>Tickets Sold</p>
+        </div>
+        <div class="glass card stat-card">
+          <h3 style="color: black;" id="statRevenue">0 EGP</h3>
+          <p>Total Revenue</p>
+        </div>
+      </div>
+
+      <div class="dashboard-layout mt-4" style="margin-top: 3rem;">
+        <div class="sidebar glass animate delay-1" style="padding: 1.5rem; height: fit-content;">
+          <a href="#" class="active" onclick="switchAdminTab(event, 'eventsListTab')">Manage Events</a>
+          <a href="#" onclick="switchAdminTab(event, 'addMatchTab')">Add Football Match</a>
+          <a href="#" onclick="switchAdminTab(event, 'addEventTab')">Add Entertainment Event</a>
+          <a href="#" onclick="switchAdminTab(event, 'eventTypesTab')">Event Types</a>
+          <a href="#" onclick="switchAdminTab(event, 'usersListTab')">Manage Users</a>
+          <a href="#" onclick="switchAdminTab(event, 'bookedTicketsTab')">Booked Tickets</a>
+        </div>
+
+        <div class="content flex-1 animate delay-2">
+
+          <!-- ========== MANAGE EVENTS TAB ========== -->
+          <div id="eventsListTab" class="glass tab-content active" style="padding: 2rem;">
+            <h2>All Events & Matches</h2>
+            <h3 style="margin-top: 1.5rem; color: var(--accent-cyan);">Football Matches</h3>
+            <div style="overflow-x: auto;">
+              <table class="data-table">
+                <thead><tr><th>ID</th><th>Match</th><th>Date</th><th>Stadium</th><th>Status</th><th>Featured</th></tr></thead>
+                <tbody id="matchesTableBody"></tbody>
+              </table>
+            </div>
+            <h3 style="margin-top: 2.5rem; color: var(--accent-purple);">Entertainment Events</h3>
+            <div style="overflow-x: auto;">
+              <table class="data-table">
+                <thead><tr><th>ID</th><th>Name</th><th>Date</th><th>Venue</th><th>Type</th><th>Featured</th></tr></thead>
+                <tbody id="entertainmentTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ========== ADD FOOTBALL MATCH TAB ========== -->
+          <div id="addMatchTab" class="glass tab-content" style="padding: 2rem;">
+            <h2>Add Football Match</h2>
+            <form id="matchForm" style="margin-top: 1.5rem;">
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>Home Team</label>
+                  <select id="matchHomeTeam"></select>
+                </div>
+                <div class="form-group">
+                  <label>Away Team</label>
+                  <select id="matchAwayTeam"></select>
+                </div>
+              </div>
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>Match Date</label>
+                  <input type="date" id="matchDate">
+                </div>
+                <div class="form-group">
+                  <label>Kick-off Time</label>
+                  <input type="text" id="matchTime" placeholder="e.g. 08:00 PM">
+                </div>
+              </div>
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>Stadium</label>
+                  <input type="text" id="matchStadium" placeholder="e.g. Cairo Stadium">
+                </div>
+                <div class="form-group">
+                  <label>City</label>
+                  <input type="text" id="matchCity" placeholder="e.g. Cairo, Egypt">
+                </div>
+              </div>
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>Match Number</label>
+                  <input type="number" id="matchNumber" placeholder="e.g. 6" min="1">
+                </div>
+                <div class="form-group">
+                  <label>Booking Status</label>
+                  <select id="matchStatus">
+                    <option value="available">Available</option>
+                    <option value="closed">Booking Closed</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+                <input type="checkbox" id="matchFeatured" style="width: auto;">
+                <label for="matchFeatured" style="margin: 0; cursor: pointer;">Feature on Home Page</label>
+              </div>
+              <div class="form-group" style="margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary">Create Match</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ========== ADD ENTERTAINMENT EVENT TAB ========== -->
+          <div id="addEventTab" class="glass tab-content" style="padding: 2rem;">
+            <h2>Add Entertainment Event</h2>
+            <form id="eventForm" style="margin-top: 1.5rem;">
+              <div class="form-group">
+                <label>Event Name</label>
+                <input type="text" id="eventName" placeholder="e.g. Neon Lights World Tour">
+              </div>
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>Event Date</label>
+                  <input type="date" id="eventDate">
+                </div>
+                <div class="form-group">
+                  <label>Event Type</label>
+                  <select id="eventTypeSelect"></select>
+                </div>
+              </div>
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>Venue</label>
+                  <input type="text" id="eventVenue" placeholder="e.g. Cairo Festival City">
+                </div>
+                <div class="form-group">
+                  <label>Base Ticket Price (EGP)</label>
+                  <input type="number" id="eventPrice" placeholder="e.g. 60" min="0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea id="eventDescription" placeholder="Describe what makes this event special..." style="min-height: 100px; resize: vertical;"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Google Maps Link</label>
+                <input type="text" id="eventMapUrl" placeholder="Paste a Google Maps link or embed URL">
+              </div>
+              <div class="form-group">
+                <label>Header Image</label>
+                <div class="drop-zone" id="headerDropZone" onclick="document.getElementById('headerFileInput').click()">
+                  <p>Drag & drop an image here, or click to select</p>
+                  <input type="file" id="headerFileInput" accept="image/*" style="display: none;">
+                  <div id="headerPreview"></div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Gallery Images</label>
+                <div class="drop-zone" id="galleryDropZone" onclick="document.getElementById('galleryFileInput').click()">
+                  <p>Drag & drop images here, or click to select multiple</p>
+                  <input type="file" id="galleryFileInput" accept="image/*" multiple style="display: none;">
+                </div>
+                <div class="gallery-preview" id="galleryPreview"></div>
+              </div>
+              <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+                <input type="checkbox" id="eventFeatured" style="width: auto;">
+                <label for="eventFeatured" style="margin: 0; cursor: pointer;">Feature on Home Page</label>
+              </div>
+              <div class="form-group" style="margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary">Create Event</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ========== EVENT TYPES TAB ========== -->
+          <div id="eventTypesTab" class="glass tab-content" style="padding: 2rem;">
+            <h2>Event Types</h2>
+            <div class="form-group" style="margin-top: 1.5rem;">
+              <label>Add New Type</label>
+              <div style="display: flex; gap: 1rem;">
+                <input type="text" id="newTypeInput" placeholder="e.g. Festival, Conference">
+                <button class="btn btn-primary" onclick="addEventType()">Add</button>
+              </div>
+            </div>
+            <ul id="eventTypesList" style="margin-top: 1rem; list-style: none; padding: 0;"></ul>
+          </div>
+
+          <!-- ========== MANAGE USERS TAB ========== -->
+          <div id="usersListTab" class="glass tab-content" style="padding: 2rem;">
+            <h2>Manage Users</h2>
+            <div style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+              <h3 style="margin-bottom: 1.5rem;">Create Admin Account</h3>
+              <form id="createAdminForm">
+                <div class="grid grid-3" style="gap: 1rem; align-items: end;">
+                  <div class="form-group" style="margin: 0;"><input type="text" id="newAdminName" placeholder="Admin Name"></div>
+                  <div class="form-group" style="margin: 0;"><input type="email" id="newAdminEmail" placeholder="Admin Email"></div>
+                  <div class="form-group" style="margin: 0;"><input type="password" id="newAdminPassword" placeholder="Secure Password"></div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Create Admin</button>
+              </form>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="data-table">
+                <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Tickets</th><th>Joined</th><th>Action</th></tr></thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
+            
+            <h3 style="margin-top: 3rem; margin-bottom: 1.5rem;">Registered Admin Accounts</h3>
+            <div style="overflow-x: auto;">
+              <table class="data-table">
+                <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Action</th></tr></thead>
+                <tbody id="adminsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ========== BOOKED TICKETS TAB ========== -->
+          <div id="bookedTicketsTab" class="glass tab-content" style="padding: 2rem;">
+            <h2>All Booked Tickets</h2>
+            <div id="allTicketsContainer" style="margin-top: 1.5rem;"></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer><div class="container"><p>&copy; 2026 Makank Admin Dashboard.</p></div></footer>
