@@ -60,3 +60,25 @@
    border-bottom-left-radius: 16px; border-bottom-right-radius: 16px;
    display: flex; justify-content: space-between; color: var(--text-secondary); font-size: 0.85rem;
  }
+     .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    .dot-green { background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .dot-red { background: var(--error); box-shadow: 0 0 8px var(--error); }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs"></div>
+
+  <nav>
+    <div class="container">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <a href="categories.html" class="btn btn-secondary" style="padding: 0.5rem 1rem; border-radius: 50px; font-size: 0.8rem; text-decoration: none;">&larr; Back</a>
+        <div class="logo"><span class="text-gradient">Makank</span></div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="categories.html" class="active">Browse Events</a>
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+      </div>
+    </div>
+  </nav>
