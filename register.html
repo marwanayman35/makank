@@ -92,14 +92,14 @@
         password: { required: true, minLength: 6 },
         confirmPassword: { required: true, match: 'password' }
       }, (form) => {
-        // Mock Registration Logic
+        
         const fullname = document.getElementById('fullname').value;
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         
         let users = JSON.parse(AppStorage.getItem('makank_users')) || [];
         
-        // Check if email exists
+        
         const emailInput = document.getElementById('email');
         if (users.find(u => u.email === email)) {
           window.showError(emailInput, 'An account with this email already exists');
