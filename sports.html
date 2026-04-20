@@ -121,3 +121,51 @@
       const statusDot = isAvailable
         ? `<span class="status-dot dot-green"></span>Available`
         : `<span class="status-dot dot-red"></span>Booking Closed`;
+        container.innerHTML += `
+          <div class="match-card animate fade-in" style="animation-delay: ${idx * 0.1}s;">
+            <div class="match-main">
+              <div style="display: flex; align-items: center;">
+                <div class="team-logos">
+                  <img src="assets/Football%20Matches/${encodeURIComponent(m.homeTeamLogo)}" class="team-logo" alt="${m.homeTeam}">
+                  <img src="assets/Football%20Matches/${encodeURIComponent(m.awayTeamLogo)}" class="team-logo" alt="${m.awayTeam}">
+                </div>
+                <div class="team-names">${m.homeTeam} <span class="vs-text">vs</span> ${m.awayTeam}</div>
+              </div>
+              <div class="match-info-block">
+                <span class="info-icon">${locationIcon}</span>
+                <div class="info-text">
+                  <span class="info-label">${m.stadium}</span>
+                  <span class="info-sub">${m.city}</span>
+                </div>
+              </div>
+              <div class="match-info-block">
+                <span class="info-icon">${calendarIcon}</span>
+                <div class="info-text">
+                  <span class="info-label">${m.date}</span>
+                  <span class="info-sub">${m.time}</span>
+                </div>
+              </div>
+              <div>${actionBtn}</div>
+            </div>
+            <div class="match-footer">
+              <span>Tournament: <strong>Nile League 2025/2026</strong></span>
+              <span>Match No: <strong>${m.matchNo}</strong></span>
+              <span>Final Stage</span>
+              <span>${statusDot}</span>
+            </div>
+          </div>`;
+      });
+    });
+
+    function bookMatch(eventName, date, venue) {
+      if (!AppStorage.getItem('loggedInUser')) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const evt = { id: 'MATCH-' + Math.floor(Math.random()*10000), name: eventName, date: date, venue: venue };
+      AppStorage.setItem('selectedEvent', JSON.stringify(evt));
+      window.location.href = 'booking.html?id=' + evt.id;
+    }
+  </script>
+</body>
+</html>
