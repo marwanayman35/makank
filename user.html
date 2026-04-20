@@ -116,7 +116,7 @@
       }
       let loggedInUser = JSON.parse(loggedInUserStr);
       
-      // Sync fresh data from global database so admin-ticket cancellations apply immediately to active session
+      
       const users = JSON.parse(AppStorage.getItem('makank_users')) || [];
       const freshUserMatch = users.find(u => u.email === loggedInUser.email);
       if (freshUserMatch) {
@@ -124,17 +124,17 @@
          AppStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
       }
       
-      // Update greeting with user's name
+      
       document.getElementById('userGreeting').innerHTML = `Welcome back, <span class="text-gradient">${loggedInUser.name}</span>!`;
       
-      // Fill the profile form fields
+      
       document.getElementById('fullname').value = loggedInUser.name;
       document.getElementById('email').value = loggedInUser.email || '';
 
-      // Render tickets dynamically
+      
       renderUserTickets(loggedInUser);
 
-      // Listen for profile changes
+      
       window.setupFormValidation('profileForm', {
         fullname: { required: true, minLength: 3, type: 'name' },
         email: { required: true, type: 'email' }
@@ -143,7 +143,7 @@
         const newEmail = document.getElementById('email').value.trim();
         const newPass = document.getElementById('newPassword').value;
 
-        // Update local state
+        
         loggedInUser.name = newName;
         loggedInUser.email = newEmail;
         if (newPass.length > 0) {
@@ -164,10 +164,10 @@
           AppStorage.setItem('makank_users', JSON.stringify(users));
         }
 
-        // Update UI
+       
         document.getElementById('userGreeting').innerHTML = `Welcome back, <span class="text-gradient">${newName}</span>!`;
         window.showToast('Profile settings saved successfully!', 'success');
-        document.getElementById('newPassword').value = ''; // clear password field
+        document.getElementById('newPassword').value = ''; 
       });
     });
 
@@ -186,7 +186,7 @@
 
       container.innerHTML = '';
       
-      // Dynamic verification fallback: ensure tickets don't map to events that were deleted before the admin hooks were added
+      
       const activeEvents = JSON.parse(AppStorage.getItem('makank_events')) || [];
       const activeMatches = JSON.parse(AppStorage.getItem('makank_matches')) || [];
       const isEventActive = (name) => {
