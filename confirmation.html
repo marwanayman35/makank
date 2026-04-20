@@ -100,3 +100,41 @@
       }
       
       const session = JSON.parse(sessionStr);
+      document.getElementById('ticketVisualizer').innerHTML = `
+        <div style="width: 100%;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
+            <div>
+              <h3 style="color: var(--accent-cyan); font-size: 1.8rem; margin: 0; line-height: 1.2;">${session.eventName}</h3>
+            </div>
+            <span style="background: rgba(0,245,255,0.1); color: var(--text-primary); padding: 0.4rem 1rem; border-radius: 30px; font-weight: bold; font-size: 0.85rem; border: 1px solid var(--accent-cyan);">CONFIRMED</span>
+          </div>
+          
+          <div class="grid grid-2" style="gap: 1.5rem; text-align: left;">
+            <div>
+              <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem;">Date</div>
+              <div style="font-weight: 600; color: var(--text-primary); font-size: 1.1rem;">${session.eventDate}</div>
+            </div>
+            <div>
+              <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem;">Venue</div>
+              <div style="font-weight: 600; color: var(--text-primary); font-size: 1.1rem;">${session.venue}</div>
+            </div>
+            <div>
+              <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem;">Ticket Section</div>
+              <div style="font-weight: 600; color: var(--text-primary); font-size: 1.1rem;">${session.tier} <span style="opacity: 0.6; font-size: 0.9rem; margin-left: 0.5rem;">(Qty: ${session.quantity})</span></div>
+            </div>
+            <div>
+              <div style="color: var(--text-secondary); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.3rem;">Ticket ID</div>
+              <div style="font-weight: 600; color: var(--text-primary); font-family: monospace; font-size: 1.1rem; letter-spacing: 1px;">${session.issuedTicketId}</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Clear the cart so it cannot be double refreshed
+      setTimeout(() => {
+        AppStorage.removeItem('checkoutSession');
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
