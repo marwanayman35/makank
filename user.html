@@ -203,3 +203,22 @@
         `;
       });
     }
+
+    function logoutUser() {
+      AppStorage.removeItem('loggedInUser');
+      window.location.href = 'login.html';
+    }
+
+    function switchTab(tabId) {
+      document.getElementById('ticketsTab').style.display = 'none';
+      document.getElementById('profileTab').style.display = 'none';
+      
+      const links = document.querySelectorAll('.sidebar a');
+      links.forEach(l => l.classList.remove('active'));
+      event.target.classList.add('active');
+
+      document.getElementById(tabId).style.display = 'block';
+    }
+  </script>
+</body>
+</html>
