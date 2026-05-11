@@ -20,4 +20,4 @@ Makank is an advanced real-world web-based platform designed to simplify ticket 
 - Database Management
 - Web Technologies
 - UI/UX Design
-- .
+- 
