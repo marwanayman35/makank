@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', { title: 'Browse Events - Makank' }) %>
+<style>
+  .events-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  .filters-sidebar {
+    position: sticky;
+    top: 100px;
+  }
+  .filter-group {
+    margin-bottom: 1.5rem;
+  }
+  .filter-group select, .filter-group input {
+    width: 100%;
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border-glass);
+    color: white;
+    padding: 0.8rem;
+    border-radius: 6px;
+    outline: none;
+  }
+  .filter-group input::placeholder {
+    color: rgba(255, 255, 255, 0.9);
+  }
+  .events-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .event-card-horizontal {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-glass);
+    border-radius: 12px;
+    transition: all var(--transition-normal);
+    align-items: center;
+  }
+  .event-card-horizontal:hover {
+    background: var(--bg-glass-hover);
+    border-color: var(--accent-cyan);
+    transform: translateX(5px);
+  }
+  .event-image {
+    width: 150px;
+    height: 100px;
+    border-radius: 8px;
+    background: var(--bg-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed var(--border-glass);
+  }
+  .event-details-content {
+    flex: 1;
+  }
+  @media (max-width: 768px) {
+    .events-layout {
+      grid-template-columns: 1fr;
+    }
+    .event-card-horizontal {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .event-image {
+      width: 100%;
+      height: 150px;
+    }
+  }
+</style>
+<body>
+  <div class="bg-blobs"></div>
+
+  <%- include('partials/navbar', { activePage: 'categories' }) %>
+
+  <main class="container" style="margin-top: 2rem;">
+    <h1 style="margin-bottom: 2rem;" data-i18n="discover_title">Discover <span class="text-gradient">Entertainment</span></h1>
+
+    <div class="events-layout animate fade-in">
+      <!-- Filters Sidebar -->
+      <aside class="filters-sidebar glass" style="padding: 1.5rem;">
+        <h3 data-i18n="filter_header">Filters</h3>
+        <hr style="border-color: var(--border-glass); margin: 1rem 0;">
+        
+        <div class="filter-group">
+          <label data-i18n="filter_search">Search Query</label>
+          <input type="text" id="filterSearch" placeholder="Search names..." data-i18n-placeholder="filter_search_placeholder">
+        </div>
+
+        <div class="filter-group" style="display: none;">
+          <label data-i18n="filter_type">Event Type</label>
+          <select id="filterType">
+            <option value="concert">Concerts</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label data-i18n="filter_location">Location / Venue</label>
+          <input type="text" id="filterLocation" placeholder="City or stadium..." data-i18n-placeholder="filter_location_placeholder">
+        </div>
+
+        <div class="filter-group">
+          <label data-i18n="filter_sort">Sort By</label>
+          <select id="filterSort">
+            <option value="date-asc" data-i18n="sort_date_asc">Date (Earliest First)</option>
+            <option value="date-desc" data-i18n="sort_date_desc">Date (Latest First)</option>
+            <option value="name-asc" data-i18n="sort_name_asc">Name (A-Z)</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%;" onclick="applyFilters()" data-i18n="filter_apply">Apply Filters</button>
+      </aside>
+
+      <!-- Events Listing Container -->
+      <div style="display: flex; flex-direction: column; flex: 1;">
+        <section class="events-grid" id="eventsListContainer" style="margin-top: 0 !important; padding-top: 0 !important; gap: 1.5rem;">
+          <!-- Rendered by JS -->
+        </section>
+        
+        <!-- Pagination controls -->
+        <div id="eventsPagination"></div>
+      </div>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script src="/js/main.js"></script>
+  <script>
+    let filteredList = [];
+    let currentPage = 1;
+    const itemsPerPage = 5;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await window.loadAppState();
+      // Pre-fill search if navigating from home page search bar
+      const urlParams = new URLSearchParams(window.location.search);
+      const q = urlParams.get('q');
+      if (q) {
+        document.getElementById('filterSearch').value = q;
+      }
+      const t = urlParams.get('type');
+      
+      // Hide Event Type filter and hardcode to concert
+      const typeSelect = document.getElementById('filterType');
+
+      if (t && t !== 'football') {
+        typeSelect.value = t;
+      } else {
+        typeSelect.value = 'concert';
+      }
+
+      applyFilters();
+    });
+
+    window.addEventListener('languagechange', () => {
+      applyFilters();
+    });
+
+    function applyFilters() {
+      const q = document.getElementById('filterSearch').value.toLowerCase();
+      const t = document.getElementById('filterType').value;
+      const loc = document.getElementById('filterLocation').value.toLowerCase();
+      const sort = document.getElementById('filterSort').value;
+
+      let filtered = STATE.events.filter(ev => {
+        const matchesQuery = ev.name.toLowerCase().includes(q) || ev.id.toLowerCase().includes(q);
+        const matchesType = (t === 'all') || (ev.type.toLowerCase() === t.toLowerCase());
+        const matchesLoc = !loc || (ev.venue && ev.venue.toLowerCase().includes(loc));
+        return matchesQuery && matchesType && matchesLoc;
+      });
+
+      filtered.sort((a, b) => {
+        if (sort === 'date-asc') {
+          return new Date(a.date) - new Date(b.date);
+        } else if (sort === 'date-desc') {
+          return new Date(b.date) - new Date(a.date);
+        } else if (sort === 'name-asc') {
+          return a.name.localeCompare(b.name);
+        }
+        return 0;
+      });
+
+      filteredList = filtered;
+      renderPage(1);
+    }
+
+    function renderPage(page) {
+      currentPage = page;
+      const start = (currentPage - 1) * itemsPerPage;
+      const paginated = filteredList.slice(start, start + itemsPerPage);
+      
+      renderEvents(paginated);
+      window.renderPaginationControl('eventsPagination', filteredList.length, currentPage, itemsPerPage, (newPage) => {
+        renderPage(newPage);
+      });
+    }
+
+    function renderEvents(eventsArray) {
+      const container = document.getElementById('eventsListContainer');
+      container.innerHTML = '';
+      
+      const isAr = window.getCurrentLanguage() === 'ar';
+      
+      if (eventsArray.length === 0) {
+        const noTitle = isAr ? 'لم يتم العثور على فعاليات' : 'No events found';
+        const noDesc = isAr ? 'جرّب تعديل فلاتر البحث.' : 'Try adjusting your search filters.';
+        container.innerHTML = `<div class="glass" style="padding: 3rem; text-align: center;"><h3>${noTitle}</h3><p>${noDesc}</p></div>`;
+        return;
+      }
+
+      eventsArray.forEach(ev => {
+        const color = ev.type === 'football' ? 'cyan' : 'purple';
+        const imgSrc = ev.headerImage || `/assets/images/${ev.type === 'football' ? 'football.png' : 'concert.jpg'}`;
+        const labelDate = isAr ? 'التاريخ:' : 'Date:';
+        const labelCity = isAr ? 'المدينة:' : 'City:';
+        const btnText = isAr ? 'عرض التفاصيل' : 'View Details';
+        const badgeText = isAr ? (ev.type === 'concert' ? 'حفل موسيقائي' : ev.type) : (ev.type.charAt(0).toUpperCase() + ev.type.slice(1));
+        
+        container.innerHTML += `
+          <div class="glass" style="overflow: hidden; border-radius: 24px; display: flex; transition: transform 0.3s, border-color 0.3s; border: 1px solid var(--border-glass);" onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--accent-cyan)'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-glass)'">
+            <div style="background: url('${imgSrc}') center/cover; width: 280px; min-height: 200px; flex-shrink: 0;"></div>
+            <div style="padding: 1.8rem 2rem; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+              <h3 style="font-size: 2rem; margin-top: 0; margin-bottom: 0.8rem; color: var(--text-primary); font-weight: 800; line-height: 1;">${ev.name}</h3>
+              <div style="display: flex; gap: 2rem; color: var(--text-secondary); font-size: 1rem; margin-bottom: 1rem;">
+                <span><strong>${labelDate}</strong> ${ev.date}</span>
+                <span><strong>${labelCity}</strong> ${ev.venue}</span>
+              </div>
+              <span class="badge badge-${color}" style="text-transform: capitalize; margin-bottom: 0; width: fit-content;">${badgeText}</span>
+            </div>
+            <div style="display: flex; align-items: center; padding-right: 2rem; padding-left: 2rem;">
+               <a href="/event-details?id=${encodeURIComponent(ev.id)}" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1.1rem; box-shadow: 0 10px 20px rgba(0, 245, 255, 0.4); text-align: center; white-space: nowrap;">${btnText}</a>
+            </div>
+          </div>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>

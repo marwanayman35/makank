@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', { title: 'Admin Panel - Makank' }) %>
+<style>
+  .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+  .data-table th, .data-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--border-glass); vertical-align: middle; }
+  .data-table th { color: var(--text-secondary); font-weight: 600; }
+  .data-table tr:hover { background: rgba(255,255,255,0.02); }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+  .modal { background: var(--bg-surface); padding: 2rem; border-radius: 16px; width: 90%; max-width: 500px; border: 1px solid var(--border-glass); }
+  .sidebar a { border-radius: 50px; }
+  .ticket-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; }
+  .badge-tickets { background: rgba(0, 245, 255, 0.15); color: var(--accent-cyan); }
+  .badge-none { background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); }
+  .drop-zone { border: 2px dashed var(--border-glass); border-radius: 12px; padding: 2rem; text-align: center; cursor: pointer; transition: all 0.3s; color: var(--text-secondary); }
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent-cyan); background: rgba(0, 245, 255, 0.05); color: var(--accent-cyan); }
+  .drop-zone img { max-height: 150px; border-radius: 8px; margin-top: 1rem; }
+  .gallery-preview { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+  .gallery-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-glass); }
+  .featured-toggle { cursor: pointer; padding: 0.3rem 0.6rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; border: none; transition: all 0.3s; }
+  .featured-on { background: rgba(0, 245, 255, 0.2); color: var(--accent-cyan); }
+  .featured-off { background: rgba(255,255,255,0.05); color: var(--text-secondary); }
+  
+  /* Premium image preview container style */
+  .image-preview-container { position: relative; display: inline-block; margin: 5px; }
+  .image-preview-container img { width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border-glass); transition: transform 0.2s, box-shadow 0.2s; }
+  .image-preview-container img:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0, 245, 255, 0.3); }
+  .image-preview-container .delete-btn { position: absolute; top: -5px; right: -5px; background: var(--error); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 14px; font-weight: bold; line-height: 18px; text-align: center; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); transition: background-color 0.2s, transform 0.2s; }
+  .image-preview-container .delete-btn:hover { background: #ff1a1a; transform: scale(1.2); }
+</style>
+<body>
+  <div class="bg-blobs"></div>
+
+  <%- include('partials/navbar', { navStyle: 'admin' }) %>
+
+  <main class="container">
+    <section>
+      <div class="animate"><h1>Dashboard Control <span class="text-gradient">Center</span></h1></div>
+
+      <div class="grid grid-3 mt-4 animate delay-1" style="margin-top: 2rem;">
+        <div class="glass card stat-card">
+          <h3 style="color: var(--accent-purple);" id="statUsers">0</h3>
+          <p>Registered Users</p>
+        </div>
+        <div class="glass card stat-card">
+          <h3 style="color: var(--accent-cyan);" id="statTickets">0</h3>
+          <p>Tickets Sold</p>
+        </div>
+        <div class="glass card stat-card">
+          <h3 style="color: black;" id="statRevenue">0 EGP</h3>
+          <p>Total Revenue</p>
+        </div>
+      </div>
+
+      <div class="dashboard-layout mt-4" style="margin-top: 3rem;">
+        <div class="sidebar glass animate delay-1" style="padding: 1.5rem; height: fit-content;">
+          <a href="#" class="active" onclick="switchAdminTab(event, 'eventsListTab')">Manage Events</a>
+          <a href="#" onclick="switchAdminTab(event, 'addMatchTab')">Add Football Match</a>
+          <a href="#" onclick="switchAdminTab(event, 'addEventTab')">Add Entertainment Event</a>
+          <a href="#" onclick="switchAdminTab(event, 'eventTypesTab')">Event Types</a>
+          <a href="#" onclick="switchAdminTab(event, 'usersListTab')">Manage Users</a>
+          <a href="#" onclick="switchAdminTab(event, 'bookedTicketsTab')">Booked Tickets</a>
+        </div>
+
+        <div class="content flex-1 animate delay-2">
+
+          <!-- ========== MANAGE EVENTS TAB ========== -->
+          <div id="eventsListTab" class="glass tab-content active" style="padding: 2rem;">
+            <h2>All Events & Matches</h2>
+            <h3 style="margin-top: 1.5rem; color: var(--accent-cyan);">Football Matches</h3>
+            <div style="overflow-x: auto;">
+              <table class="data-table">
+                <thead><tr><th>ID</th><th>Match</th><th>Date</th><th>Stadium</th><th>Status</th><th>Featured</th></tr></thead>
+                <tbody id="matchesTableBody"></tbody>
+              </table>
+            </div>
+            <div id="matchTablePagination"></div>
+            
+            <h3 style="margin-top: 2.5rem; color: var(--accent-purple);">Entertainment Events</h3>
+            <div style="overflow-x: auto;">
+              <table class="data-table">
+                <thead><tr><th>ID</th><th>Name</th><th>Date</th><th>Venue</th><th>Type</th><th>Featured</th></tr></thead>
+                <tbody id="entertainmentTableBody"></tbody>
+              </table>
+            </div>
+            <div id="eventTablePagination"></div>
+          </div>
+
+          <!-- ========== ADD FOOTBALL MATCH TAB ========== -->
+          <div id="addMatchTab" class="glass tab-content" style="padding: 2rem;">
+            <h2>Add Football Match</h2>
+            <form id="matchForm" style="margin-top: 1.5rem;">
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>Home Team</label>
+                  <select id="matchHomeTeam"></select>
+                </div>
+                <div class="form-group">
+                  <label>Away Team</label>
+                  <select id="matchAwayTeam"></select>
+                </div>
+              </div>
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>Match Date</label>
+                  <input type="date" id="matchDate">
+                </div>
+                <div class="form-group">
+                  <label>Kick-off Time</label>
+                  <input type="text" id="matchTime" placeholder="e.g. 08:00 PM">
+                </div>
+              </div>
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>City</label>
+                  <select id="matchCity" style="background: white; color: black;"></select>
+                </div>
+                <div class="form-group">
+                  <label>Stadium</label>
+                  <select id="matchStadium" style="background: white; color: black;"></select>
+                </div>
+              </div>
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>Match Number</label>
+                  <input type="number" id="matchNumber" placeholder="e.g. 6" min="1">
+                </div>
+                <div class="form-group">
+                  <label>Booking Status</label>
+                  <select id="matchStatus">
+                    <option value="available">Available</option>
+                    <option value="closed">Booking Closed</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+                <input type="checkbox" id="matchFeatured" style="width: auto;">
+                <label for="matchFeatured" style="margin: 0; cursor: pointer;">Feature on Home Page</label>
+              </div>
+              <div class="form-group" style="margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary">Create Match</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ========== ADD ENTERTAINMENT EVENT TAB ========== -->
+          <div id="addEventTab" class="glass tab-content" style="padding: 2rem;">
+            <h2>Add Entertainment Event</h2>
+            <form id="eventForm" style="margin-top: 1.5rem;">
+              <div class="form-group">
+                <label>Event Name</label>
+                <input type="text" id="eventName" placeholder="e.g. Neon Lights World Tour">
+              </div>
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>Event Date</label>
+                  <input type="date" id="eventDate">
+                </div>
+                <div class="form-group">
+                  <label>Event Type</label>
+                  <select id="eventTypeSelect"></select>
+                </div>
+              </div>
+              <div class="grid grid-2" style="gap: 1rem;">
+                <div class="form-group">
+                  <label>Venue</label>
+                  <input type="text" id="eventVenue" placeholder="e.g. Cairo Festival City">
+                </div>
+                <div class="form-group">
+                  <label>Base Ticket Price (EGP)</label>
+                  <input type="number" id="eventPrice" placeholder="e.g. 60" min="0">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea id="eventDescription" placeholder="Describe what makes this event special..." style="min-height: 100px; resize: vertical;"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Google Maps Link</label>
+                <input type="text" id="eventMapUrl" placeholder="Paste a Google Maps link or embed URL">
+              </div>
+              <div class="form-group">
+                <label>Header Image</label>
+                <div class="drop-zone" id="headerDropZone" onclick="document.getElementById('headerFileInput').click()">
+                  <p>Drag & drop an image here, or click to select</p>
+                  <input type="file" id="headerFileInput" accept="image/*" style="display: none;">
+                  <div id="headerPreview"></div>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Gallery Images</label>
+                <div class="drop-zone" id="galleryDropZone" onclick="document.getElementById('galleryFileInput').click()">
+                  <p>Drag & drop images here, or click to select multiple</p>
+                  <input type="file" id="galleryFileInput" accept="image/*" multiple style="display: none;">
+                </div>
+                <div class="gallery-preview" id="galleryPreview"></div>
+              </div>
+              <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+                <input type="checkbox" id="eventFeatured" style="width: auto;">
+                <label for="eventFeatured" style="margin: 0; cursor: pointer;">Feature on Home Page</label>
+              </div>
+              <div class="form-group" style="margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary">Create Event</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- ========== EVENT TYPES TAB ========== -->
+          <div id="eventTypesTab" class="glass tab-content" style="padding: 2rem;">
+            <h2>Event Types</h2>
+            <div class="form-group" style="margin-top: 1.5rem;">
+              <label>Add New Type</label>
+              <div style="display: flex; gap: 1rem;">
+                <input type="text" id="newTypeInput" placeholder="e.g. Festival, Conference">
+                <button class="btn btn-primary" onclick="addEventType()">Add</button>
+              </div>
+            </div>
+            <ul id="eventTypesList" style="margin-top: 1rem; list-style: none; padding: 0;"></ul>
+          </div>
+
+          <!-- ========== MANAGE USERS TAB ========== -->
+          <div id="usersListTab" class="glass tab-content" style="padding: 2rem;">
+            <h2>Manage Users</h2>
+            <div style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+              <h3 style="margin-bottom: 1.5rem;">Create Admin Account</h3>
+              <form id="createAdminForm">
+                <div class="grid grid-3" style="gap: 1rem; align-items: end;">
+                  <div class="form-group" style="margin: 0;"><input type="text" id="newAdminName" placeholder="Admin Name"></div>
+                  <div class="form-group" style="margin: 0;"><input type="email" id="newAdminEmail" placeholder="Admin Email"></div>
+                  <div class="form-group" style="margin: 0;"><input type="password" id="newAdminPassword" placeholder="Secure Password"></div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Create Admin</button>
+              </form>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="data-table">
+                <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Tickets</th><th>Joined</th><th>Action</th></tr></thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
+            <div id="userTablePagination"></div>
+            
+            <h3 style="margin-top: 3rem; margin-bottom: 1.5rem;">Registered Admin Accounts</h3>
+            <div style="overflow-x: auto;">
+              <table class="data-table">
+                <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Action</th></tr></thead>
+                <tbody id="adminsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ========== BOOKED TICKETS TAB ========== -->
+          <div id="bookedTicketsTab" class="glass tab-content" style="padding: 2rem;">
+            <h2>All Booked Tickets</h2>
+            <div id="allTicketsContainer" style="margin-top: 1.5rem;"></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer', { footerText: 'Makank Admin Dashboard.' }) %>
+
+  <!-- Edit User Modal -->
+  <div class="modal-overlay" id="editUserModal">
+    <div class="modal glass">
+      <h3>Edit User Credentials</h3>
+      <div class="form-group" style="margin-top: 1rem;"><label>Name</label><input type="text" id="editUserName" style="background: white; color: black;"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="editUserEmail" style="background: white; color: black;"></div>
+      <div class="form-group"><label>New Password</label><input type="text" id="editUserPassword" style="background: white; color: black;"></div>
+      <button class="btn btn-primary" onclick="saveUserEdit()">Save Changes</button>
+      <button class="btn btn-secondary" onclick="closeModal('editUserModal')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Edit Event Type Modal -->
+  <div class="modal-overlay" id="editEventTypeModal">
+    <div class="modal glass">
+      <h3>Edit Event Type</h3>
+      <div class="form-group" style="margin-top: 1rem;">
+        <label>Type Name</label>
+        <input type="text" id="editEventTypeName" style="background: white; color: black;">
+      </div>
+      <button class="btn btn-primary" onclick="saveEventTypeEdit()">Save Changes</button>
+      <button class="btn btn-secondary" onclick="closeModal('editEventTypeModal')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Edit Match Modal -->
+  <div class="modal-overlay" id="editMatchModal">
+    <div class="modal glass" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+      <h3>Edit Football Match</h3>
+      <form id="editMatchForm" style="margin-top: 1rem;">
+        <div class="grid grid-2" style="gap: 1rem;">
+          <div class="form-group">
+            <label>Home Team</label>
+            <select id="editMatchHomeTeam" style="background: white; color: black;"></select>
+          </div>
+          <div class="form-group">
+            <label>Away Team</label>
+            <select id="editMatchAwayTeam" style="background: white; color: black;"></select>
+          </div>
+        </div>
+        <div class="grid grid-2" style="gap: 1rem;">
+          <div class="form-group">
+            <label>Match Date</label>
+            <input type="date" id="editMatchDate" style="background: white; color: black;">
+          </div>
+          <div class="form-group">
+            <label>Kick-off Time</label>
+            <input type="text" id="editMatchTime" placeholder="e.g. 08:00 PM" style="background: white; color: black;">
+          </div>
+        </div>
+        <div class="grid grid-2" style="gap: 1rem;">
+          <div class="form-group">
+            <label>City</label>
+            <select id="editMatchCity" style="background: white; color: black;"></select>
+          </div>
+          <div class="form-group">
+            <label>Stadium</label>
+            <select id="editMatchStadium" style="background: white; color: black;"></select>
+          </div>
+        </div>
+        <div class="grid grid-2" style="gap: 1rem;">
+          <div class="form-group">
+            <label>Match Number</label>
+            <input type="number" id="editMatchNumber" min="1" style="background: white; color: black;">
+          </div>
+          <div class="form-group">
+            <label>Booking Status</label>
+            <select id="editMatchStatus" style="background: white; color: black;">
+              <option value="available">Available</option>
+              <option value="closed">Booking Closed</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+          <input type="checkbox" id="editMatchFeatured" style="width: auto;">
+          <label for="editMatchFeatured" style="margin: 0; cursor: pointer;">Feature on Home Page</label>
+        </div>
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('editMatchModal')" style="flex: 1;">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Event Modal -->
+  <div class="modal-overlay" id="editEventModal">
+    <div class="modal glass" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+      <h3>Edit Entertainment Event</h3>
+      <form id="editEventForm" style="margin-top: 1rem;">
+        <div class="form-group">
+          <label>Event Name</label>
+          <input type="text" id="editEventName" style="background: white; color: black;">
+        </div>
+        <div class="grid grid-2" style="gap: 1rem;">
+          <div class="form-group">
+            <label>Event Date</label>
+            <input type="date" id="editEventDate" style="background: white; color: black;">
+          </div>
+          <div class="form-group">
+            <label>Event Type</label>
+            <select id="editEventTypeSelect" style="background: white; color: black;"></select>
+          </div>
+        </div>
+        <div class="grid grid-2" style="gap: 1rem;">
+          <div class="form-group">
+            <label>Venue</label>
+            <input type="text" id="editEventVenue" style="background: white; color: black;">
+          </div>
+          <div class="form-group">
+            <label>Base Ticket Price (EGP)</label>
+            <input type="number" id="editEventPrice" min="0" style="background: white; color: black;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="editEventDescription" style="min-height: 80px; resize: vertical; background: white; color: black;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Google Maps Link</label>
+          <input type="text" id="editEventMapUrl" style="background: white; color: black;">
+        </div>
+        <div class="form-group">
+          <label>Header Image (leave blank to keep current)</label>
+          <div class="drop-zone" id="editHeaderDropZone" onclick="document.getElementById('editHeaderFileInput').click()">
+            <p>Drag & drop to replace header image</p>
+            <input type="file" id="editHeaderFileInput" accept="image/*" style="display: none;">
+            <div id="editHeaderPreview"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Gallery Images (click to select to replace current)</label>
+          <div class="drop-zone" id="editGalleryDropZone" onclick="document.getElementById('editGalleryFileInput').click()">
+            <p>Drag & drop to replace gallery images</p>
+            <input type="file" id="editGalleryFileInput" accept="image/*" multiple style="display: none;">
+          </div>
+          <div class="gallery-preview" id="editGalleryPreview"></div>
+        </div>
+        <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 1rem;">
+          <input type="checkbox" id="editEventFeatured" style="width: auto;">
+          <label for="editEventFeatured" style="margin: 0; cursor: pointer;">Feature on Home Page</label>
+        </div>
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+          <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+          <button type="button" class="btn btn-secondary" onclick="closeModal('editEventModal')" style="flex: 1;">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/main.js"></script>
+  <script>
+    // ========================
+    // CITIES & STADIUMS MAPPING
+    // ========================
+    const CITIES_STADIUMS = {
+      'Cairo': ['Cairo Stadium', 'Petro Sport Stadium', 'Al Salam Stadium'],
+      'Alexandria': ['Borg El Arab', 'Alexandria Stadium', 'Harras El-Hodoud Stadium'],
+      'Ismailia': ['Ismailia Stadium'],
+      'Suez': ['Suez Stadium', 'Army Stadium']
+    };
+
+    function getCityKey(dbCity) {
+      if (!dbCity) return 'Cairo';
+      const clean = dbCity.toLowerCase();
+      if (clean.includes('cairo')) return 'Cairo';
+      if (clean.includes('alexandria')) return 'Alexandria';
+      if (clean.includes('ismailia')) return 'Ismailia';
+      if (clean.includes('suez')) return 'Suez';
+      return 'Cairo';
+    }
+
+    function updateStadiumOptions(citySelectId, stadiumSelectId, selectedStadium = null) {
+      const citySelect = document.getElementById(citySelectId);
+      const stadiumSelect = document.getElementById(stadiumSelectId);
+      if (!citySelect || !stadiumSelect) return;
+
+      const city = citySelect.value;
+      const stadiums = CITIES_STADIUMS[city] || [];
+      
+      stadiumSelect.innerHTML = '';
+      stadiums.forEach(st => {
+        const option = document.createElement('option');
+        option.value = st;
+        option.textContent = st;
+        if (selectedStadium && st.toLowerCase() === selectedStadium.toLowerCase()) {
+          option.selected = true;
+        }
+        stadiumSelect.appendChild(option);
+      });
+    }
+
+    // ========================
+    // TEAMS DATABASE
+    // ========================
+    const TEAMS = [
+      { name: 'Al Ahly FC', logo: 'egypt_al-ahly.football-logos.cc.svg' },
+      { name: 'Al Ittihad Alexandria', logo: 'egypt_al-ittihad-alexandria.football-logos.cc.svg' },
+      { name: 'Al Masry SC', logo: 'egypt_al-masry.football-logos.cc.svg' },
+      { name: 'Al Mokawloon Al Arab', logo: 'egypt_al-mokawloon-al-arab.football-logos.cc.svg' },
+      { name: 'Ceramica Cleopatra', logo: 'egypt_ceramica-cleopatra.football-logos.cc.svg' },
+      { name: 'ENPPI', logo: 'egypt_enppi.football-logos.cc.svg' },
+      { name: 'Ismaily SC', logo: 'egypt_ismaily.football-logos.cc.svg' },
+      { name: 'Petrojet FC', logo: 'egypt_petrojet.football-logos.cc.svg' },
+      { name: 'Pyramids FC', logo: 'egypt_pyramids.football-logos.cc.svg' },
+      { name: 'Zamalek SC', logo: 'egypt_zamalek.football-logos.cc (2).svg' }
+    ];
+
+    let currentEditUserId = null;
+    let headerFile = null;
+    let galleryFiles = [];
+
+    // ========================
+    // DATA HELPERS (MongoDB Backend Integration)
+    // ========================
+    let globalBookingsList = [];
+
+    window.loadAdminData = async () => {
+      try {
+        // Sync app state first
+        await window.loadAppState();
+
+        // Sync bookings/tickets
+        const bookingsRes = await fetch('/api/bookings');
+        const bookingsData = await bookingsRes.json();
+        if (bookingsData.success) {
+          globalBookingsList = bookingsData.tickets;
+        }
+      } catch (err) {
+        console.error('Error synchronizing admin dashboard data:', err);
+      }
+    };
+
+    function getUsers() { return STATE.users; }
+    function getAdmins() { return STATE.admins; }
+    function getAllTickets() {
+      return globalBookingsList;
+    }
+
+    function adminLogout() { AppStorage.removeItem('loggedInAdmin'); window.location.href = '/login'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    async function switchAdminTab(evt, tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.sidebar a').forEach(l => l.classList.remove('active'));
+      if (evt && evt.target) {
+        evt.target.classList.add('active');
+      } else {
+        const link = document.querySelector(`.sidebar a[onclick*="${tabId}"]`);
+        if (link) link.classList.add('active');
+      }
+      document.getElementById(tabId).classList.add('active');
+      await window.loadAdminData();
+      renderAdminData();
+    }
+
+    // ========================
+    // PAGINATION STATE
+    // ========================
+    let matchPage = 1;
+    let eventPage = 1;
+    let userPage = 1;
+    const adminItemsPerPage = 5;
+
+    // ========================
+    // RENDER ALL ADMIN DATA
+    // ========================
+    function renderAdminData() {
+      const users = getUsers();
+      const allTickets = getAllTickets();
+
+      // Stats
+      document.getElementById('statUsers').innerText = users.length;
+      document.getElementById('statTickets').innerText = allTickets.length;
+      let totalRevenue = 0;
+      allTickets.forEach(t => { totalRevenue += parseFloat(t.total) || 0; });
+      document.getElementById('statRevenue').innerText = totalRevenue.toLocaleString() + ' EGP';
+
+      // Event Types
+      const typesList = document.getElementById('eventTypesList');
+      const addSelect = document.getElementById('eventTypeSelect');
+      typesList.innerHTML = '';
+      addSelect.innerHTML = '';
+      STATE.eventTypes.filter(t => t !== 'football').forEach(t => {
+        typesList.innerHTML += `<li style="text-transform: capitalize; padding: 0.5rem 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-glass);">
+          <span>${t}</span>
+          <div>
+            <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.8rem;margin-right:0.5rem;" onclick="openEditEventType('${t}')">Edit</button>
+            <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.8rem;color:var(--error);border-color:var(--error);" onclick="deleteEventType('${t}')">Del</button>
+          </div>
+        </li>`;
+        addSelect.innerHTML += `<option value="${t}">${t}</option>`;
+      });
+
+      // Matches table (Paginated)
+      const matchesBody = document.getElementById('matchesTableBody');
+      matchesBody.innerHTML = '';
+      
+      const totalMatches = STATE.matches.length;
+      const paginatedMatches = STATE.matches.slice((matchPage - 1) * adminItemsPerPage, matchPage * adminItemsPerPage);
+      
+      paginatedMatches.forEach(m => {
+        const statusLabel = m.status === 'available' ? '<span style="color:var(--success);">Available</span>' : '<span style="color:var(--error);">Closed</span>';
+        matchesBody.innerHTML += `<tr>
+          <td style="font-family:monospace;font-size:0.85rem;">${m.id}</td>
+          <td style="font-weight:600;">${m.homeTeam} vs ${m.awayTeam}</td>
+          <td>${m.date}</td><td>${m.stadium}</td><td>${statusLabel}</td>
+          <td style="white-space:nowrap;">
+            <button class="featured-toggle ${m.featured ? 'featured-on' : 'featured-off'}" onclick="toggleMatchFeatured('${m.id}')">${m.featured ? 'Featured' : 'Not Featured'}</button>
+            <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.75rem;margin-left:0.5rem;" onclick="openEditMatch('${m.id}')">Edit</button>
+            <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.75rem;margin-left:0.5rem;color:var(--error);border-color:var(--error);" onclick="deleteMatch('${m.id}')">Del</button>
+          </td>
+        </tr>`;
+      });
+      window.renderPaginationControl('matchTablePagination', totalMatches, matchPage, adminItemsPerPage, (newPage) => {
+        matchPage = newPage;
+        renderAdminData();
+      });
+
+      // Entertainment events table (Paginated)
+      const entBody = document.getElementById('entertainmentTableBody');
+      entBody.innerHTML = '';
+      
+      const totalEvents = STATE.events.length;
+      const paginatedEvents = STATE.events.slice((eventPage - 1) * adminItemsPerPage, eventPage * adminItemsPerPage);
+      
+      paginatedEvents.forEach(e => {
+        entBody.innerHTML += `<tr>
+          <td style="font-family:monospace;font-size:0.85rem;">${e.id}</td>
+          <td style="font-weight:600;">${e.name}</td><td>${e.date}</td><td>${e.venue}</td>
+          <td style="text-transform:capitalize;">${e.type}</td>
+          <td style="white-space:nowrap;">
+            <button class="featured-toggle ${e.featured ? 'featured-on' : 'featured-off'}" onclick="toggleEventFeatured('${e.id}')">${e.featured ? 'Featured' : 'Not Featured'}</button>
+            <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.75rem;margin-left:0.5rem;" onclick="openEditEvent('${e.id}')">Edit</button>
+            <button class="btn btn-secondary" style="padding:0.2rem 0.5rem;font-size:0.75rem;margin-left:0.5rem;color:var(--error);border-color:var(--error);" onclick="deleteEvent('${e.id}')">Del</button>
+          </td>
+        </tr>`;
+      });
+      window.renderPaginationControl('eventTablePagination', totalEvents, eventPage, adminItemsPerPage, (newPage) => {
+        eventPage = newPage;
+        renderAdminData();
+      });
+
+      // Users table (Paginated)
+      const usersBody = document.getElementById('usersTableBody');
+      usersBody.innerHTML = '';
+      
+      const totalUsers = users.length;
+      const paginatedUsers = users.slice((userPage - 1) * adminItemsPerPage, userPage * adminItemsPerPage);
+      
+      if (totalUsers === 0) {
+        usersBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);padding:2rem;">No registered users yet.</td></tr>`;
+      } else {
+        paginatedUsers.forEach(u => {
+          const tc = (u.tickets && u.tickets.length) || 0;
+          const badge = tc > 0 ? `<span class="ticket-badge badge-tickets">${tc} ticket${tc>1?'s':''}</span>` : `<span class="ticket-badge badge-none">None</span>`;
+          usersBody.innerHTML += `<tr>
+            <td style="font-family:monospace;font-size:0.85rem;">${u.id||'—'}</td>
+            <td style="font-weight:600;">${u.name}</td><td>${u.email}</td><td>${badge}</td>
+            <td style="font-size:0.85rem;color:var(--text-secondary);">${u.created||'—'}</td>
+            <td>
+              <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.8rem;" onclick="openEditUser('${u.id}')">Edit</button>
+              <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.8rem;color:var(--error);border-color:var(--error);" onclick="deleteUser('${u.id}')">Del</button>
+            </td>
+          </tr>`;
+        });
+      }
+      window.renderPaginationControl('userTablePagination', totalUsers, userPage, adminItemsPerPage, (newPage) => {
+        userPage = newPage;
+        renderAdminData();
+      });
+
+      // Admins table
+      const adminsBody = document.getElementById('adminsTableBody');
+      adminsBody.innerHTML = '';
+      const admins = getAdmins();
+      if (admins.length === 0) {
+        adminsBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);padding:2rem;">No registered admins yet.</td></tr>`;
+      } else {
+        admins.forEach(a => {
+          adminsBody.innerHTML += `<tr>
+            <td style="font-family:monospace;font-size:0.85rem;">${a.id||'—'}</td>
+            <td style="font-weight:600;">${a.name}</td><td>${a.email}</td>
+            <td>
+              <button class="btn btn-secondary" style="padding:0.3rem 0.6rem;font-size:0.8rem;color:var(--error);border-color:var(--error);" onclick="deleteAdmin('${a.id}')">Del</button>
+            </td>
+          </tr>`;
+        });
+      }
+
+      // Booked tickets
+      const ticketsCont = document.getElementById('allTicketsContainer');
+      if (allTickets.length === 0) {
+        ticketsCont.innerHTML = `<div style="text-align:center;padding:3rem;border:1px dashed var(--border-glass);border-radius:12px;"><h3 style="color:var(--text-secondary);">No Tickets Booked Yet</h3><p style="color:rgba(255,255,255,0.4);">When users purchase tickets, they will appear here.</p></div>`;
+      } else {
+        let html = `<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>Ticket ID</th><th>Event</th><th>User</th><th>Tier</th><th>Qty</th><th>Total</th><th>Purchased</th></tr></thead><tbody>`;
+        allTickets.forEach(t => {
+          html += `<tr><td style="font-family:monospace;font-size:0.85rem;color:var(--accent-cyan);">${t.ticketId}</td><td style="font-weight:600;">${t.event}</td><td>${t.userName} <span style="color:var(--text-secondary);font-size:0.8rem;">(${t.userEmail})</span></td><td style="text-transform:capitalize;">${t.tier}</td><td>${t.qty}</td><td style="font-weight:bold;">${t.total} EGP</td><td style="font-size:0.85rem;color:var(--text-secondary);">${t.purchasedOn||'—'}</td></tr>`;
+        });
+        html += `</tbody></table></div>`;
+        ticketsCont.innerHTML = html;
+      }
+
+      // Populate team dropdowns
+      const homeSelect = document.getElementById('matchHomeTeam');
+      const awaySelect = document.getElementById('matchAwayTeam');
+      homeSelect.innerHTML = '';
+      awaySelect.innerHTML = '';
+      TEAMS.forEach(t => {
+        homeSelect.innerHTML += `<option value="${t.name}" data-logo="${t.logo}">${t.name}</option>`;
+        awaySelect.innerHTML += `<option value="${t.name}" data-logo="${t.logo}">${t.name}</option>`;
+      });
+      // Default away to second team
+      if (awaySelect.options.length > 1) awaySelect.selectedIndex = 1;
+
+      // Populate city dropdown for match form
+      const citySelect = document.getElementById('matchCity');
+      if (citySelect && citySelect.options.length === 0) {
+        Object.keys(CITIES_STADIUMS).forEach(city => {
+          const option = document.createElement('option');
+          option.value = city;
+          option.textContent = city;
+          citySelect.appendChild(option);
+        });
+        citySelect.addEventListener('change', () => {
+          updateStadiumOptions('matchCity', 'matchStadium');
+        });
+        updateStadiumOptions('matchCity', 'matchStadium');
+      }
+    }
+
+    // ========================
+    // FEATURED TOGGLES
+    // ========================
+    async function toggleMatchFeatured(id) {
+      try {
+        const response = await fetch(`/api/matches/toggle-featured/${encodeURIComponent(id)}`, { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+          await window.loadAdminData();
+          renderAdminData();
+          window.showToast('Featured status updated');
+        }
+      } catch (err) {
+        window.showToast('Network error toggling match featured status.', 'error');
+      }
+    }
+    async function toggleEventFeatured(id) {
+      try {
+        const response = await fetch(`/api/events/toggle-featured/${encodeURIComponent(id)}`, { method: 'POST' });
+        const data = await response.json();
+        if (data.success) {
+          await window.loadAdminData();
+          renderAdminData();
+          window.showToast('Featured status updated');
+        }
+      } catch (err) {
+        window.showToast('Network error toggling event featured status.', 'error');
+      }
+    }
+
+    async function deleteMatch(id) {
+      if (!confirm('Are you sure you want to delete this match?')) return;
+      try {
+        const response = await fetch(`/api/matches/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (data.success) {
+          await window.loadAdminData();
+          renderAdminData();
+          window.showToast('Match deleted and matching bookings cancelled');
+        } else {
+          window.showToast(data.message || 'Error deleting match.', 'error');
+        }
+      } catch (err) {
+        window.showToast('Network error deleting match.', 'error');
+      }
+    }
+
+    async function deleteEvent(id) {
+      if (!confirm('Are you sure you want to delete this event?')) return;
+      try {
+        const response = await fetch(`/api/events/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (data.success) {
+          await window.loadAdminData();
+          renderAdminData();
+          window.showToast('Event deleted and matching bookings cancelled');
+        } else {
+          window.showToast(data.message || 'Error deleting event.', 'error');
+        }
+      } catch (err) {
+        window.showToast('Network error deleting event.', 'error');
+      }
+    }
+
+    // ========================
+    // IMAGE UPLOAD HANDLERS
+    // ========================
+    function setupDropZone(zoneId, fileInputId, isMultiple, onUpload) {
+      const zone = document.getElementById(zoneId);
+      const fileInput = document.getElementById(fileInputId);
+      if (!zone || !fileInput) return;
+
+      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('dragover'); });
+      zone.addEventListener('dragleave', () => { zone.classList.remove('dragover'); });
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault(); zone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (isMultiple) {
+          Array.from(files).forEach(file => onUpload(file));
+        } else {
+          onUpload(files[0]);
+        }
+      });
+      fileInput.addEventListener('change', () => {
+        const files = fileInput.files;
+        if (isMultiple) {
+          Array.from(files).forEach(file => onUpload(file));
+        } else {
+          onUpload(files[0]);
+        }
+      });
+    }
+
+    // Helper functions for header/gallery preview management
+    window.removeHeaderFile = function() {
+      headerFile = null;
+      document.getElementById('headerPreview').innerHTML = '';
+      document.getElementById('headerFileInput').value = '';
+    };
+
+    window.removeGalleryFile = function(index) {
+      galleryFiles.splice(index, 1);
+      renderGalleryPreviews();
+    };
+
+    function renderGalleryPreviews() {
+      const galleryPreview = document.getElementById('galleryPreview');
+      galleryPreview.innerHTML = '';
+      galleryFiles.forEach((file, index) => {
+        const objectUrl = URL.createObjectURL(file);
+        galleryPreview.innerHTML += `
+          <div class="image-preview-container">
+            <img src="${objectUrl}" alt="Gallery Preview">
+            <button type="button" class="delete-btn" onclick="removeGalleryFile(${index})">×</button>
+          </div>`;
+      });
+    }
+
+    // For Edit Event
+    window.removeEditHeaderFile = function() {
+      editHeaderFile = null;
+      document.getElementById('editHeaderFileInput').value = '';
+      renderEditHeaderPreview();
+    };
+
+    window.removeExistingHeaderImage = function() {
+      existingHeaderImage = '';
+      renderEditHeaderPreview();
+    };
+
+    function renderEditHeaderPreview() {
+      const container = document.getElementById('editHeaderPreview');
+      if (!container) return;
+      container.innerHTML = '';
+      if (editHeaderFile) {
+        const objectUrl = URL.createObjectURL(editHeaderFile);
+        container.innerHTML = `
+          <div class="image-preview-container">
+            <img src="${objectUrl}" alt="Header Preview">
+            <button type="button" class="delete-btn" onclick="removeEditHeaderFile()">×</button>
+          </div>`;
+      } else if (existingHeaderImage) {
+        container.innerHTML = `
+          <div class="image-preview-container">
+            <img src="${existingHeaderImage}" alt="Header Preview">
+            <button type="button" class="delete-btn" onclick="removeExistingHeaderImage()">×</button>
+          </div>`;
+      }
+    }
+
+    window.removeExistingGalleryImage = function(index) {
+      existingGalleryImages.splice(index, 1);
+      renderEditGalleryPreviews();
+    };
+
+    window.removeEditGalleryFile = function(index) {
+      editGalleryFiles.splice(index, 1);
+      renderEditGalleryPreviews();
+    };
+
+    function renderEditGalleryPreviews() {
+      const container = document.getElementById('editGalleryPreview');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      existingGalleryImages.forEach((imgUrl, index) => {
+        container.innerHTML += `
+          <div class="image-preview-container">
+            <img src="${imgUrl}" alt="Gallery Preview">
+            <button type="button" class="delete-btn" onclick="removeExistingGalleryImage(${index})">×</button>
+          </div>`;
+      });
+
+      editGalleryFiles.forEach((file, index) => {
+        const objectUrl = URL.createObjectURL(file);
+        container.innerHTML += `
+          <div class="image-preview-container">
+            <img src="${objectUrl}" alt="Gallery Preview">
+            <button type="button" class="delete-btn" onclick="removeEditGalleryFile(${index})">×</button>
+          </div>`;
+      });
+    }
+
+    // ========================
+    // USER LOGIC
+    // ========================
+    function openEditUser(id) {
+      currentEditUserId = id;
+      const users = getUsers();
+      const u = users.find(x => x.id === id);
+      if (!u) return;
+      document.getElementById('editUserName').value = u.name;
+      document.getElementById('editUserEmail').value = u.email;
+      document.getElementById('editUserPassword').value = u.password || '';
+      document.getElementById('editUserModal').style.display = 'flex';
+    }
+    async function saveUserEdit() {
+      const users = getUsers();
+      const u = users.find(x => x.id === currentEditUserId);
+      if (!u) return;
+      
+      const newName = document.getElementById('editUserName').value.trim();
+      const newEmail = document.getElementById('editUserEmail').value.trim();
+      const pw = document.getElementById('editUserPassword').value;
+
+      try {
+        const response = await fetch('/api/auth/profile', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-User-Email': u.email 
+          },
+          body: JSON.stringify({ fullname: newName, email: newEmail, newPassword: pw })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          // Re-sync local logged-in state if admin edited their own active user profile
+          const as = AppStorage.getItem('loggedInUser');
+          if (as) {
+            const au = JSON.parse(as);
+            if (au.id === currentEditUserId) {
+              AppStorage.setItem('loggedInUser', JSON.stringify(data.user));
+            }
+          }
+          await window.loadAdminData();
+          renderAdminData();
+          closeModal('editUserModal');
+          window.showToast('User updated successfully');
+        } else {
+          window.showToast(data.message || 'Error updating user profile.', 'error');
+        }
+      } catch (err) {
+        window.showToast('Network error updating user.', 'error');
+      }
+    }
+    async function deleteUser(id) {
+      if (!confirm('Are you sure you want to delete this user?')) return;
+      try {
+        const response = await fetch(`/api/auth/users/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (data.success) {
+          await window.loadAdminData();
+          renderAdminData();
+          window.showToast('User deleted successfully');
+        } else {
+          window.showToast(data.message || 'Error deleting user.', 'error');
+        }
+      } catch (err) {
+        window.showToast('Network error deleting user.', 'error');
+      }
+    }
+    async function deleteAdmin(id) {
+       if (!confirm('Are you sure you want to delete this admin account?')) return;
+       try {
+         const response = await fetch(`/api/auth/admins/${encodeURIComponent(id)}`, { method: 'DELETE' });
+         const data = await response.json();
+         if (data.success) {
+           await window.loadAdminData();
+           renderAdminData();
+           window.showToast('Admin deleted successfully');
+         } else {
+           window.showToast(data.message || 'Error deleting admin.', 'error');
+         }
+       } catch (err) {
+         window.showToast('Network error deleting admin.', 'error');
+       }
+    }
+
+    async function addEventType() {
+      const val = document.getElementById('newTypeInput').value.trim();
+      if (!val) return;
+      try {
+        const response = await fetch('/api/event-types', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: val })
+        });
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('newTypeInput').value = '';
+          await window.loadAdminData();
+          renderAdminData();
+          window.showToast('Event type added successfully');
+        } else {
+          window.showToast(data.message || 'Error adding event type.', 'error');
+        }
+      } catch (err) {
+        window.showToast('Network error adding event type.', 'error');
+      }
+    }
+
+    let currentEditEventType = null;
+
+    function openEditEventType(type) {
+      currentEditEventType = type;
+      document.getElementById('editEventTypeName').value = type;
+      document.getElementById('editEventTypeModal').style.display = 'flex';
+    }
+
+    async function saveEventTypeEdit() {
+      const newType = document.getElementById('editEventTypeName').value.trim().toLowerCase();
+      if (!newType) return;
+      if (newType === currentEditEventType) {
+        closeModal('editEventTypeModal');
+        return;
+      }
+      try {
+        const response = await fetch('/api/event-types/edit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ oldType: currentEditEventType, newType })
+        });
+        const data = await response.json();
+        if (data.success) {
+          await window.loadAdminData();
+          renderAdminData();
+          closeModal('editEventTypeModal');
+          window.showToast('Event type updated successfully');
+        } else {
+          window.showToast(data.message || 'Error updating event type.', 'error');
+        }
+      } catch (err) {
+        window.showToast('Network error updating event type.', 'error');
+      }
+    }
+
+    async function deleteEventType(type) {
+      if (type === 'football') {
+         window.showToast('Cannot delete football type', 'error');
+         return;
+      }
+      if (!confirm(`Are you sure you want to delete '${type}'? Note: Existing events of this type will keep it unless you also edit them.`)) return;
+      try {
+        const response = await fetch(`/api/event-types/${encodeURIComponent(type)}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (data.success) {
+          await window.loadAdminData();
+          renderAdminData();
+          window.showToast('Event type deleted');
+        } else {
+          window.showToast(data.message || 'Error deleting event type.', 'error');
+        }
+      } catch (err) {
+        window.showToast('Network error deleting event type.', 'error');
+      }
+    }
+
+    let currentEditMatchId = null;
+    let currentEditEventId = null;
+    let editHeaderFile = null;
+    let editGalleryFiles = [];
+    let existingHeaderImage = '';
+    let existingGalleryImages = [];
+
+    function parseHumanDateToYYYYMMDD(str) {
+      if (!str) return '';
+      if (str.includes('-')) return str;
+      const parts = str.split(' ');
+      if (parts.length < 4) return '';
+      const day = parseInt(parts[1]);
+      const monthStr = parts[2];
+      const year = parseInt(parts[3]);
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const monthIdx = months.indexOf(monthStr);
+      if (monthIdx === -1) return '';
+      const date = new Date(year, monthIdx, day);
+      return date.toISOString().split('T')[0];
+    }
+
+    function openEditMatch(id) {
+      currentEditMatchId = id;
+      const match = STATE.matches.find(m => m.id === id);
+      if (!match) return;
+      
+      const homeSelect = document.getElementById('editMatchHomeTeam');
+      const awaySelect = document.getElementById('editMatchAwayTeam');
+      homeSelect.innerHTML = '';
+      awaySelect.innerHTML = '';
+      TEAMS.forEach(t => {
+        homeSelect.innerHTML += `<option value="${t.name}" data-logo="${t.logo}">${t.name}</option>`;
+        awaySelect.innerHTML += `<option value="${t.name}" data-logo="${t.logo}">${t.name}</option>`;
+      });
+
+      document.getElementById('editMatchHomeTeam').value = match.homeTeam;
+      document.getElementById('editMatchAwayTeam').value = match.awayTeam;
+      document.getElementById('editMatchDate').value = parseHumanDateToYYYYMMDD(match.date);
+      document.getElementById('editMatchTime').value = match.time || '';
+      document.getElementById('editMatchNumber').value = match.matchNo || 1;
+      document.getElementById('editMatchStatus').value = match.status || 'available';
+      document.getElementById('editMatchFeatured').checked = !!match.featured;
+
+      // Populate edit city options
+      const citySelect = document.getElementById('editMatchCity');
+      citySelect.innerHTML = '';
+      Object.keys(CITIES_STADIUMS).forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+      });
+
+      const matchedCityKey = getCityKey(match.city);
+      citySelect.value = matchedCityKey;
+
+      // Update stadiums and select current
+      updateStadiumOptions('editMatchCity', 'editMatchStadium', match.stadium || match.venue);
+
+      citySelect.onchange = () => {
+        updateStadiumOptions('editMatchCity', 'editMatchStadium');
+      };
+
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('editMatchDate').setAttribute('min', today);
+
+      document.getElementById('editMatchModal').style.display = 'flex';
+    }
+
+    function openEditEvent(id) {
+      currentEditEventId = id;
+      const event = STATE.events.find(e => e.id === id);
+      if (!event) return;
+
+      document.getElementById('editEventName').value = event.name || '';
+      document.getElementById('editEventDate').value = event.date || '';
+      
+      const typeSelect = document.getElementById('editEventTypeSelect');
+      typeSelect.innerHTML = '';
+      STATE.eventTypes.filter(t => t !== 'football').forEach(t => {
+        typeSelect.innerHTML += `<option value="${t}">${t}</option>`;
+      });
+      typeSelect.value = event.type || '';
+      
+      document.getElementById('editEventVenue').value = event.venue || '';
+      document.getElementById('editEventPrice').value = event.price || 0;
+      document.getElementById('editEventDescription').value = event.description || '';
+      document.getElementById('editEventMapUrl').value = event.mapUrl || '';
+      
+      editHeaderFile = null;
+      editGalleryFiles = [];
+      existingHeaderImage = event.headerImage || '';
+      existingGalleryImages = event.galleryImages ? [...event.galleryImages] : [];
+      
+      renderEditHeaderPreview();
+      renderEditGalleryPreviews();
+
+      document.getElementById('editEventFeatured').checked = !!event.featured;
+      
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('editEventDate').setAttribute('min', today);
+
+      document.getElementById('editEventModal').style.display = 'flex';
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!AppStorage.getItem('loggedInAdmin')) { window.location.href = '/login'; return; }
+      await window.loadAdminData();
+      renderAdminData();
+
+      // Set min date to today for date pickers
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('matchDate').setAttribute('min', today);
+      document.getElementById('eventDate').setAttribute('min', today);
+
+      // Setup image drag-and-drop for create forms
+      setupDropZone('headerDropZone', 'headerFileInput', false, (file) => {
+        headerFile = file;
+        const objectUrl = URL.createObjectURL(file);
+        document.getElementById('headerPreview').innerHTML = `
+          <div class="image-preview-container">
+            <img src="${objectUrl}" alt="Header Preview">
+            <button type="button" class="delete-btn" onclick="removeHeaderFile()">×</button>
+          </div>`;
+      });
+      setupDropZone('galleryDropZone', 'galleryFileInput', true, (file) => {
+        galleryFiles.push(file);
+        renderGalleryPreviews();
+      });
+
+      // Setup image drag-and-drop for edit forms
+      setupDropZone('editHeaderDropZone', 'editHeaderFileInput', false, (file) => {
+        editHeaderFile = file;
+        renderEditHeaderPreview();
+      });
+      setupDropZone('editGalleryDropZone', 'editGalleryFileInput', true, (file) => {
+        editGalleryFiles.push(file);
+        renderEditGalleryPreviews();
+      });
+
+      // Create Admin form
+      window.setupFormValidation('createAdminForm', {
+        newAdminName: { required: true, type: 'name' }, newAdminEmail: { required: true, type: 'email' }, newAdminPassword: { required: true, minLength: 6 }
+      }, async (form) => {
+        const name = document.getElementById('newAdminName').value;
+        const email = document.getElementById('newAdminEmail').value;
+        const password = document.getElementById('newAdminPassword').value;
+        const emailInput = document.getElementById('newAdminEmail');
+
+        try {
+          const response = await fetch('/api/auth/create-admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ newAdminName: name, newAdminEmail: email, newAdminPassword: password })
+          });
+          const data = await response.json();
+          if (data.success) {
+            await window.loadAdminData();
+            renderAdminData();
+            form.reset();
+            window.showToast('Admin created securely');
+          } else {
+            window.showError(emailInput, data.message || 'Admin email already exists');
+          }
+        } catch (err) {
+          window.showToast('Network error creating admin.', 'error');
+        }
+      });
+
+      // Add Football Match form
+      window.setupFormValidation('matchForm', {
+        matchHomeTeam: { required: true }, matchAwayTeam: { required: true },
+        matchDate: { required: true, type: 'futureDate' }, matchTime: { required: true, type: 'time' }, matchStadium: { required: true }, matchCity: { required: true }, matchNumber: { required: true, type: 'numeric', minVal: 1 }
+      }, async (form) => {
+        const homeTeamName = document.getElementById('matchHomeTeam').value;
+        const awayTeamName = document.getElementById('matchAwayTeam').value;
+        if (homeTeamName === awayTeamName) { window.showToast('Home and Away teams cannot be the same!', 'error'); return; }
+        const homeTeam = TEAMS.find(t => t.name === homeTeamName);
+        const awayTeam = TEAMS.find(t => t.name === awayTeamName);
+        
+        const dateStr = (() => {
+          const d = new Date(document.getElementById('matchDate').value + 'T00:00:00');
+          const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+          const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+          return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+        })();
+
+        try {
+          const response = await fetch('/api/matches', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              homeTeam: homeTeam.name,
+              homeTeamLogo: homeTeam.logo,
+              awayTeam: awayTeam.name,
+              awayTeamLogo: awayTeam.logo,
+              date: dateStr,
+              time: document.getElementById('matchTime').value,
+              stadium: document.getElementById('matchStadium').value,
+              city: document.getElementById('matchCity').value,
+              matchNo: document.getElementById('matchNumber').value,
+              status: document.getElementById('matchStatus').value,
+              featured: document.getElementById('matchFeatured').checked
+            })
+          });
+          const data = await response.json();
+          if (data.success) {
+            await window.loadAdminData();
+            renderAdminData();
+            form.reset();
+            document.getElementById('matchFeatured').checked = false;
+            window.showToast('Football match created successfully!');
+            switchAdminTab(null, 'eventsListTab');
+          } else {
+            window.showToast(data.message || 'Error creating football match.', 'error');
+          }
+        } catch (err) {
+          window.showToast('Network error creating football match.', 'error');
+        }
+      });
+
+      // Add Entertainment Event form
+      window.setupFormValidation('eventForm', {
+        eventName: { required: true, type: 'name' }, eventDate: { required: true, type: 'futureDate' }, eventVenue: { required: true, type: 'name' }, eventPrice: { required: true, type: 'numeric' }, eventDescription: { required: true }, eventMapUrl: { type: 'url' }
+      }, async (form) => {
+        try {
+          const formData = new FormData();
+          formData.append('name', document.getElementById('eventName').value);
+          formData.append('type', document.getElementById('eventTypeSelect').value);
+          formData.append('date', document.getElementById('eventDate').value);
+          formData.append('venue', document.getElementById('eventVenue').value);
+          formData.append('price', document.getElementById('eventPrice').value);
+          formData.append('description', document.getElementById('eventDescription').value);
+          formData.append('mapUrl', document.getElementById('eventMapUrl').value);
+          formData.append('featured', document.getElementById('eventFeatured').checked);
+
+          if (headerFile) {
+            formData.append('headerImage', headerFile);
+          }
+          galleryFiles.forEach(file => {
+            formData.append('galleryImages', file);
+          });
+
+          const response = await fetch('/api/events', {
+            method: 'POST',
+            body: formData
+          });
+          const data = await response.json();
+          if (data.success) {
+            await window.loadAdminData();
+            renderAdminData();
+            form.reset();
+            headerFile = null;
+            galleryFiles = [];
+            document.getElementById('headerPreview').innerHTML = '';
+            document.getElementById('galleryPreview').innerHTML = '';
+            document.getElementById('eventFeatured').checked = false;
+            window.showToast('Entertainment event created successfully!');
+            switchAdminTab(null, 'eventsListTab');
+          } else {
+            window.showToast(data.message || 'Error creating event.', 'error');
+          }
+        } catch (err) {
+          window.showToast('Network error creating event.', 'error');
+        }
+      });
+      // Edit Football Match Form submit
+      window.setupFormValidation('editMatchForm', {
+        editMatchHomeTeam: { required: true }, editMatchAwayTeam: { required: true },
+        editMatchDate: { required: true, type: 'futureDate' }, editMatchTime: { required: true, type: 'time' }, editMatchStadium: { required: true }, editMatchCity: { required: true }, editMatchNumber: { required: true, type: 'numeric', minVal: 1 }
+      }, async (form) => {
+        const homeTeamName = document.getElementById('editMatchHomeTeam').value;
+        const awayTeamName = document.getElementById('editMatchAwayTeam').value;
+        if (homeTeamName === awayTeamName) { window.showToast('Home and Away teams cannot be the same!', 'error'); return; }
+        
+        const homeTeam = TEAMS.find(t => t.name === homeTeamName);
+        const awayTeam = TEAMS.find(t => t.name === awayTeamName);
+        
+        const dateStr = (() => {
+          const val = document.getElementById('editMatchDate').value;
+          if (val.includes('-')) {
+            const d = new Date(val + 'T00:00:00');
+            const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+          }
+          return val;
+        })();
+
+        try {
+          const response = await fetch(`/api/matches/edit/${encodeURIComponent(currentEditMatchId)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              homeTeam: homeTeam.name,
+              homeTeamLogo: homeTeam.logo,
+              awayTeam: awayTeam.name,
+              awayTeamLogo: awayTeam.logo,
+              date: dateStr,
+              time: document.getElementById('editMatchTime').value,
+              stadium: document.getElementById('editMatchStadium').value,
+              city: document.getElementById('editMatchCity').value,
+              matchNo: document.getElementById('editMatchNumber').value,
+              status: document.getElementById('editMatchStatus').value,
+              featured: document.getElementById('editMatchFeatured').checked
+            })
+          });
+          const data = await response.json();
+          if (data.success) {
+            await window.loadAdminData();
+            renderAdminData();
+            closeModal('editMatchModal');
+            window.showToast('Match updated successfully!');
+          } else {
+            window.showToast(data.message || 'Error updating match.', 'error');
+          }
+        } catch (err) {
+          window.showToast('Network error updating match.', 'error');
+        }
+      });
+
+      // Edit Entertainment Event Form submit
+      window.setupFormValidation('editEventForm', {
+        editEventName: { required: true, type: 'name' }, editEventDate: { required: true, type: 'futureDate' }, editEventVenue: { required: true, type: 'name' }, editEventPrice: { required: true, type: 'numeric' }, editEventDescription: { required: true }, editEventMapUrl: { type: 'url' }
+      }, async (form) => {
+        try {
+          const formData = new FormData();
+          formData.append('name', document.getElementById('editEventName').value);
+          formData.append('type', document.getElementById('editEventTypeSelect').value);
+          formData.append('date', document.getElementById('editEventDate').value);
+          formData.append('venue', document.getElementById('editEventVenue').value);
+          formData.append('price', document.getElementById('editEventPrice').value);
+          formData.append('description', document.getElementById('editEventDescription').value);
+          formData.append('mapUrl', document.getElementById('editEventMapUrl').value);
+          formData.append('featured', document.getElementById('editEventFeatured').checked);
+
+          if (editHeaderFile) {
+            formData.append('headerImage', editHeaderFile);
+          } else {
+            formData.append('existingHeaderImage', existingHeaderImage);
+          }
+
+          formData.append('existingGalleryImages', JSON.stringify(existingGalleryImages));
+
+          editGalleryFiles.forEach(file => {
+            formData.append('galleryImages', file);
+          });
+
+          const response = await fetch(`/api/events/edit/${encodeURIComponent(currentEditEventId)}`, {
+            method: 'POST',
+            body: formData
+          });
+          const data = await response.json();
+          if (data.success) {
+            await window.loadAdminData();
+            renderAdminData();
+            closeModal('editEventModal');
+            window.showToast('Event updated successfully!');
+          } else {
+            window.showToast(data.message || 'Error updating event.', 'error');
+          }
+        } catch (err) {
+          window.showToast('Network error updating event.', 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

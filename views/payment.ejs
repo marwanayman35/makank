@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', { title: 'Payment - Secure Checkout' }) %>
+<style>
+  .payment-layout {
+    max-width: 600px;
+    margin: 4rem auto;
+    padding: 3rem;
+  }
+  .payment-tabs {
+    display: flex;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-glass);
+  }
+  .payment-tab {
+    padding: 1rem 2rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .payment-tab.active {
+    color: black;
+    border-color: var(--accent-cyan);
+    font-weight: bold;
+  }
+  .lock-icon {
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+    opacity: 0.7;
+  }
+</style>
+<body>
+  <div class="bg-blobs"></div>
+
+  <%- include('partials/navbar', { navStyle: 'checkout' }) %>
+
+  <main class="container">
+    <div class="glass payment-layout animate fade-in">
+      <h2 style="margin-bottom: 0.5rem;">Secure <span class="text-gradient">Payment</span></h2>
+      <p style="color: var(--text-secondary); margin-bottom: 2rem;">Total Amount: <strong id="payTotal" style="color: black; font-size: 1.5rem; margin-left: 0.5rem;">0 EGP</strong></p>
+
+      <div class="payment-tabs">
+        <div class="payment-tab active" id="tabCard">Credit Card</div>
+      </div>
+
+      <form id="paymentForm">
+        <div class="form-group">
+          <label>Name on Card</label>
+          <input type="text" id="ccName" placeholder="Cardholder Name">
+        </div>
+        <div class="form-group">
+          <label>Account Verification Email</label>
+          <input type="email" id="ccEmail" placeholder="Your registered account email">
+        </div>
+        <div class="form-group">
+          <label>Card Number</label>
+          <input type="text" id="ccNumber" placeholder="0000 0000 0000 0000" maxlength="16">
+        </div>
+        <div class="grid grid-2" style="gap: 1rem;">
+          <div class="form-group">
+            <label>Expiry Date</label>
+            <input type="text" id="ccExp" placeholder="MM/YY" maxlength="5">
+          </div>
+          <div class="form-group">
+            <label>CVC / CVV</label>
+            <div class="password-container">
+              <input type="password" id="ccCVC" placeholder="123" maxlength="3">
+              <img src="https://cdn-icons-png.flaticon.com/512/159/159604.png" alt="Show" class="toggle-password" onclick="togglePasswordVisibility('ccCVC', this)">
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 2rem; padding: 1.2rem; font-size: 1.1rem;">
+          Pay Now
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script src="/js/main.js"></script>
+  <script>
+    function togglePasswordVisibility(inputId, iconEl) {
+      const input = document.getElementById(inputId);
+      const showIcon = "https://cdn-icons-png.flaticon.com/512/159/159604.png";
+      const hideIcon = "https://cdn-icons-png.flaticon.com/512/565/565655.png";
+      if (input.type === "password") {
+        input.type = "text"; iconEl.src = hideIcon;
+      } else {
+        input.type = "password"; iconEl.src = showIcon;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Authentication check
+      if (!AppStorage.getItem('loggedInUser')) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const sessionStr = AppStorage.getItem('checkoutSession');
+      if (!sessionStr) {
+        window.location.href = '/categories';
+        return;
+      }
+      
+      const session = JSON.parse(sessionStr);
+      document.getElementById('payTotal').textContent = `${session.total} EGP`;
+
+      // Auto-format Expiry Date
+      document.getElementById('ccExp').addEventListener('input', function (e) {
+        let val = e.target.value.replace(/\D/g, '');
+        if (val.length > 2) {
+          val = val.substring(0, 2) + '/' + val.substring(2, 4);
+        }
+        e.target.value = val;
+      });
+
+      window.setupFormValidation('paymentForm', {
+        ccName: { required: true, type: 'name', customMessage: "Cardholder name is required and should only contain letters." },
+        ccEmail: { required: true, type: 'email' },
+        ccNumber: { required: true, type: 'numeric', minLength: 16, customMessage: "Card number must be exactly 16 digits." },
+        ccExp: { required: true, type: 'expiry', minLength: 5, customMessage: "Format MM/YY required and must be in the future." },
+        ccCVC: { required: true, type: 'numeric', minLength: 3, customMessage: "3-digit CVV required." }
+      }, async (form) => {
+        
+        // Finalize purchase - store it in User array in MongoDB
+        const activeUserStr = AppStorage.getItem('loggedInUser');
+        
+        if (!activeUserStr) {
+           window.showToast('Session expired. Please log in again.', 'error');
+           setTimeout(() => window.location.href = '/login', 1500);
+           return;
+        }
+
+        const activeUser = JSON.parse(activeUserStr);
+        const enteredName = document.getElementById('ccName').value.trim();
+        const enteredEmail = document.getElementById('ccEmail').value.trim();
+
+        // Strict Account Validation
+        let hasMismatch = false;
+        if (enteredEmail.toLowerCase() !== (activeUser.email || '').toLowerCase()) {
+           window.showError(document.getElementById('ccEmail'), 'Email must exactly match your registered account email.');
+           hasMismatch = true;
+        }
+        if (hasMismatch) return;
+
+        try {
+          const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Email': activeUser.email
+            },
+            body: JSON.stringify({
+              holderEmail: enteredEmail,
+              eventName: session.eventName,
+              eventDate: session.eventDate,
+              venue: session.venue,
+              tier: session.tier,
+              quantity: session.quantity,
+              total: session.total
+            })
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            // Re-sync all state
+            await window.loadAppState();
+
+            // update active user in localStorage with their new ticket
+            if (!activeUser.tickets) activeUser.tickets = [];
+            activeUser.tickets.push(data.ticket);
+            AppStorage.setItem('loggedInUser', JSON.stringify(activeUser));
+
+            // Sync ticket ID to the confirmation session
+            session.issuedTicketId = data.ticket.ticketId;
+            AppStorage.setItem('checkoutSession', JSON.stringify(session));
+
+            window.location.href = '/confirmation';
+          } else {
+            window.showToast(data.message || 'Payment transaction failed.', 'error');
+          }
+        } catch (err) {
+          window.showToast('Payment network request failed.', 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
