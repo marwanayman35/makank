@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head', { title: 'Register - Makank' }) %>
+<style>
+  .auth-container {
+    max-width: 500px;
+    margin: 4rem auto;
+    padding: 3rem;
+  }
+</style>
+<body>
+  <div class="bg-blobs"></div>
+
+  <%- include('partials/navbar', { activePage: 'register' }) %>
+
+  <main class="container">
+    <div class="glass auth-container animate fade-in">
+      <h2 class="text-center" style="margin-bottom: 2rem;">Create an <span class="text-gradient">Account</span></h2>
+      <form id="registerForm">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="fullname" placeholder="Ahmed Abdalla">
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="email" placeholder="you@example.com">
+        </div>
+        <div class="grid grid-2" style="gap: 1rem;">
+          <div class="form-group">
+            <label>Password</label>
+            <div class="password-container">
+              <input type="password" id="password" placeholder="Create password">
+              <img src="https://cdn-icons-png.flaticon.com/512/159/159604.png" alt="Show Password" class="toggle-password" onclick="togglePasswordVisibility('password', this)">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Confirm Password</label>
+            <div class="password-container">
+              <input type="password" id="confirmPassword" placeholder="Confirm password">
+              <img src="https://cdn-icons-png.flaticon.com/512/159/159604.png" alt="Show Password" class="toggle-password" onclick="togglePasswordVisibility('confirmPassword', this)">
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Sign Up</button>
+      </form>
+      <p class="text-center" style="margin-top: 2rem; font-size: 0.9rem;">
+        Already have an account? <a href="/login" style="color: var(--accent-cyan); font-weight: 600;">Log in here</a>
+      </p>
+    </div>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script src="/js/main.js"></script>
+  <script>
+    function togglePasswordVisibility(inputId, iconEl) {
+      const input = document.getElementById(inputId);
+      const showIcon = "https://cdn-icons-png.flaticon.com/512/159/159604.png";
+      const hideIcon = "https://cdn-icons-png.flaticon.com/512/565/565655.png";
+      if (input.type === "password") {
+        input.type = "text"; iconEl.src = hideIcon;
+      } else {
+        input.type = "password"; iconEl.src = showIcon;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.setupFormValidation('registerForm', {
+        fullname: { required: true, type: 'name' },
+        email: { required: true, type: 'email' },
+        password: { required: true, minLength: 6 },
+        confirmPassword: { required: true, match: 'password' }
+      }, async (form) => {
+        const fullname = document.getElementById('fullname').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const emailInput = document.getElementById('email');
+        
+        try {
+          const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fullname, email, password })
+          });
+          const data = await response.json();
+
+          if (data.success) {
+            window.showToast('Registration successful! Redirecting to login...');
+            setTimeout(() => window.location.href = '/login', 1500);
+          } else {
+            window.showError(emailInput, data.message || 'An account with this email already exists.');
+          }
+        } catch (err) {
+          window.showToast('Registration network error.', 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
